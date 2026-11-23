@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Studio Pro - Suite PDF 100% Locale & Hors-Ligne</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand" onclick="switchView('dashboard')">
+        <div class="brand-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <span>PDF Studio Pro</span>
+        <span class="offline-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          100% Hors-Ligne & Privé
+        </span>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Accueil / Outils
+        </button>
+        <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+        <button class="btn-icon" id="theme-toggle" title="Basculer Mode Sombre/Clair" onclick="toggleTheme()">
+          <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+
+    <!-- ================= DASHBOARD VIEW ================= -->
+    <section id="view-dashboard" class="workspace-view active">
+      <div class="hero">
+        <h1>Tous vos outils PDF locaux en un seul endroit</h1>
+        <p>Traitement ultra-rapide, 100% local sur votre machine. Zéro upload vers des serveurs distants, confidentialité garantie.</p>
+        <div class="search-box">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="tool-search" class="search-input" placeholder="Rechercher un outil (ex: images, texte, rogner, fusionner...)" oninput="filterTools()">
+        </div>
+      </div>
+
+      <div class="tools-grid" id="tools-container">
+        <!-- Images to PDF -->
+        <div class="tool-card" onclick="openTool('img-to-pdf')">
+          <div class="tool-card-icon" style="background: #eff6ff; color: #2563eb;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          </div>
+          <h3>Images en PDF <span class="tool-badge" style="background:#dbeafe; color:#1e40af;">Populaire</span></h3>
+          <p>Convertissez des images JPG, PNG, WEBP en un document PDF unique ou multiples avec choix des marges et du format.</p>
+        </div>
+
+        <!-- PDF to Images -->
+        <div class="tool-card" onclick="openTool('pdf-to-img')">
+          <div class="tool-card-icon" style="background: #fdf2f8; color: #db2777;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          </div>
+          <h3>PDF en Images</h3>
+          <p>Extrayez chaque page de votre PDF en images PNG ou JPG haute définition (jusqu'à 300 DPI) téléchargeables en ZIP.</p>
+        </div>
+
+        <!-- Organize & Merge -->
+        <div class="tool-card" onclick="openTool('organize')">
+          <div class="tool-card-icon" style="background: #f0fdf4; color: #16a34a;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          </div>
+          <h3>Organiser & Fusionner <span class="tool-badge" style="background:#dcfce7; color:#15803d;">Essentiel</span></h3>
+          <p>Glissez-déposez pour réordonner les pages, pivoter à 90°, dupliquer, supprimer ou fusionner plusieurs fichiers PDF.</p>
+        </div>
+
+        <!-- Sejda-style Editor -->
+        <div class="tool-card" onclick="openTool('editor')">
+          <div class="tool-card-icon" style="background: #faf5ff; color: #9333ea;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          </div>
+          <h3>Éditeur de texte Sejda <span class="tool-badge" style="background:#f3e8ff; color:#7e22ce;">Pro</span></h3>
+          <p>Modifiez directement le texte existant d'un PDF, ajoutez de nouveaux paragraphes, biffer, surligner et signer.</p>
+        </div>
+
+        <!-- Crop Tool -->
+        <div class="tool-card" onclick="openTool('crop')">
+          <div class="tool-card-icon" style="background: #fff7ed; color: #ea580c;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg>
+          </div>
+          <h3>Rogner / Crop PDF</h3>
+          <p>Découpez visuellement vos pages ou supprimez automatiquement les marges blanches d'un simple clic.</p>
+        </div>
+
+        <!-- Compress Tool -->
+        <div class="tool-card" onclick="openTool('compress')">
+          <div class="tool-card-icon" style="background: #ecfeff; color: #0891b2;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+          </div>
+          <h3>Compresser PDF</h3>
+          <p>Allégez le poids de vos PDF volumineux pour les envois par email en conservant une netteté de lecture maximale.</p>
+        </div>
+
+        <!-- Protect Tool -->
+        <div class="tool-card" onclick="openTool('protect')">
+          <div class="tool-card-icon" style="background: #fef2f2; color: #dc2626;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <h3>Protéger & Chiffrer</h3>
+          <p>Verrouillez l'accès avec chiffrement AES-256 et limitez l'impression ou la copie de texte.</p>
+        </div>
+
+        <!-- Unlock Tool -->
+        <div class="tool-card" onclick="openTool('unlock')">
+          <div class="tool-card-icon" style="background: #fefce8; color: #ca8a04;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+          </div>
+          <h3>Déverrouiller PDF</h3>
+          <p>Supprimez définitivement la protection par mot de passe de vos documents autorisés.</p>
+        </div>
+
+        <!-- Watermark Tool -->
+        <div class="tool-card" onclick="openTool('watermark')">
+          <div class="tool-card-icon" style="background: #f0fdfa; color: #0d9488;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+          </div>
+          <h3>Ajouter un Filigrane</h3>
+          <p>Incorporez un tampon diagonal "CONFIDENTIEL", "COPIE" ou texte personnalisé avec opacité réglable.</p>
+        </div>
+
+        <!-- Page Numbers -->
+        <div class="tool-card" onclick="openTool('page-numbers')">
+          <div class="tool-card-icon" style="background: #f5f3ff; color: #7c3aed;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+          </div>
+          <h3>Numéroter les pages</h3>
+          <p>Insérez des numéros de page "Page X sur Y" avec positionnement précis en pied de page ou en-tête.</p>
+        </div>
+
+        <!-- PDF to Word -->
+        <div class="tool-card" onclick="openTool('to-word')">
+          <div class="tool-card-icon" style="background: #eff6ff; color: #1d4ed8;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          </div>
+          <h3>PDF en Word (DOCX)</h3>
+          <p>Convertissez le contenu de votre PDF en un fichier Microsoft Word modifiable avec conservation des titres.</p>
+        </div>
+
+        <!-- Word to PDF -->
+        <div class="tool-card" onclick="openTool('word-to-pdf')">
+          <div class="tool-card-icon" style="background: #e0f2fe; color: #0284c7;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="12" x2="12" y2="18"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
+          </div>
+          <h3>Word en PDF (DOCX) <span class="tool-badge" style="background:#e0f2fe; color:#0369a1;">Nouveau</span></h3>
+          <p>Convertissez vos documents Word .docx en PDF haute fidélité nativement en conservant mise en page et polices.</p>
+        </div>
+
+        <!-- Split PDF -->
+        <div class="tool-card" onclick="openTool('split')">
+          <div class="tool-card-icon" style="background: #fef3c7; color: #d97706;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+          </div>
+          <h3>Découper / Diviser PDF</h3>
+          <p>Séparez un PDF en pages individuelles ou extrayez des plages de pages précises (ex: 1-3, 5-8) en ZIP ou PDF.</p>
+        </div>
+
+        <!-- Remove Pages -->
+        <div class="tool-card" onclick="openTool('remove-pages')">
+          <div class="tool-card-icon" style="background: #fee2e2; color: #b91c1c;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </div>
+          <h3>Supprimer des pages</h3>
+          <p>Éliminez instantanément les pages indésirables ou les feuilles blanches d'un document PDF.</p>
+        </div>
+
+        <!-- Flatten PDF -->
+        <div class="tool-card" onclick="openTool('flatten')">
+          <div class="tool-card-icon" style="background: #f1f5f9; color: #475569;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          </div>
+          <h3>Aplatir PDF (Flatten)</h3>
+          <p>Verrouillez définitivement les formulaires interactifs, annotations et signatures en graphiques non modifiables.</p>
+        </div>
+
+        <!-- PDF to Text & Markdown -->
+        <div class="tool-card" onclick="openTool('pdf-to-text')">
+          <div class="tool-card-icon" style="background: #f0fdf4; color: #047857;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </div>
+          <h3>PDF en Texte & Markdown <span class="tool-badge" style="background:#d1fae5; color:#065f46;">IA / LLM</span></h3>
+          <p>Extrayez tout le texte propre ou convertissez votre document en Markdown structuré optimisé pour ChatGPT/Claude.</p>
+        </div>
+
+        <!-- Metadata & Sanitizer -->
+        <div class="tool-card" onclick="openTool('metadata')">
+          <div class="tool-card-icon" style="background: #fae8ff; color: #a21caf;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          </div>
+          <h3>Métadonnées & RGPD</h3>
+          <p>Consultez, modifiez ou purgez intégralement toutes les métadonnées cachées (auteur, logiciel, dates) pour conformité.</p>
+        </div>
+
+        <!-- Bates Numbering -->
+        <div class="tool-card" onclick="openTool('bates')">
+          <div class="tool-card-icon" style="background: #fef3c7; color: #b45309;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
+          <h3>Numérotation Bates Juridique</h3>
+          <p>Indexez vos pièces juridiques et dossiers d'avocat avec préfixe et zéros (ex: PIECE-00001, PIECE-00002).</p>
+        </div>
+
+        <!-- Fast Rotate -->
+        <div class="tool-card" onclick="openTool('rotate-fast')">
+          <div class="tool-card-icon" style="background: #e0e7ff; color: #4338ca;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          </div>
+          <h3>Pivoter les pages</h3>
+          <p>Faites pivoter à 90°, 180° ou 270° toutes les pages d'un coup, ou spécifiquement les pages paires ou impaires.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: IMAGES TO PDF ================= -->
+    <section id="view-img-to-pdf" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🖼️ Images en PDF</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('img-to-pdf')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('img-to-pdf')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-img" onclick="triggerFileInput('input-img')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <h3>Glissez vos images ici ou cliquez pour choisir</h3>
+        <p>Prend en charge JPG, PNG, WEBP, BMP, TIFF (sélection multiple autorisée)</p>
+        <button class="btn btn-primary" type="button">Parcourir les images</button>
+        <input type="file" id="input-img" multiple accept="image/*" style="display:none;" onchange="handleImageFiles(this.files)">
+      </div>
+
+      <div id="img-panel" style="display:none;">
+        <div class="active-file-bar">
+          <div class="file-info-group">
+            <strong id="img-count-text">0 images sélectionnées</strong>
+          </div>
+          <button class="btn btn-secondary" onclick="triggerFileInput('input-img')">+ Ajouter d'autres images</button>
+        </div>
+
+        <!-- Thumbnails Tray -->
+        <div id="img-thumbnails" class="organizer-grid" style="margin-bottom: 2rem;"></div>
+
+        <!-- Configuration -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Taille de page</label>
+            <select id="img-page-size" class="form-control">
+              <option value="fit">Ajuster exactement à l'image</option>
+              <option value="A4" selected>Format standard A4</option>
+              <option value="Letter">Format US Letter</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Orientation</label>
+            <select id="img-orientation" class="form-control">
+              <option value="auto" selected>Automatique (selon l'image)</option>
+              <option value="portrait">Portrait (vertical)</option>
+              <option value="landscape">Paysage (horizontal)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Marges</label>
+            <select id="img-margin" class="form-control">
+              <option value="0" selected>Sans marge (Plein cadre)</option>
+              <option value="20">Petite marge (7 mm)</option>
+              <option value="40">Grande marge (14 mm)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeImagesToPdf()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Générer et Télécharger le PDF
+        </button>
+      </div>
+
+      <div id="img-result" style="display:none;"></div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('img-to-pdf')">🔄 Traiter d'autres images</button>
+        <button class="btn btn-primary" onclick="goToNextTool('img-to-pdf')">Outil suivant : PDF en Images ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: PDF TO IMAGES ================= -->
+    <section id="view-pdf-to-img" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">📸 PDF en Images</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('pdf-to-img')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('pdf-to-img')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-pdf-to-img" onclick="triggerFileInput('input-pdf-to-img')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        <h3>Glissez votre PDF ici</h3>
+        <p>Extraction des pages en images haute résolution</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-pdf-to-img" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'pdf-to-img')">
+      </div>
+
+      <div id="pdf-to-img-panel" style="display:none;">
+        <div class="active-file-bar">
+          <div class="file-info-group">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <strong id="pdf-to-img-name">document.pdf</strong>
+            <span class="badge-info" id="pdf-to-img-pages">0 pages</span>
+          </div>
+          <button class="btn btn-secondary" onclick="triggerFileInput('input-pdf-to-img')">Changer de fichier</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Format de sortie</label>
+            <select id="p2i-format" class="form-control">
+              <option value="png" selected>PNG (Haute fidélité sans compression)</option>
+              <option value="jpg">JPG (Fichiers plus légers)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Résolution / Qualité (DPI)</label>
+            <select id="p2i-dpi" class="form-control">
+              <option value="72">72 DPI (Standard Web / Léger)</option>
+              <option value="150" selected>150 DPI (Recommandé / Excellente netteté)</option>
+              <option value="300">300 DPI (Qualité Impression / Ultra net)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pages à extraire</label>
+            <input type="text" id="p2i-pages" class="form-control" placeholder="Toutes (ou ex: 1-3, 5)">
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executePdfToImages()">
+          Convertir les pages en images
+        </button>
+
+        <div id="p2i-gallery-section" style="display:none; margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>Pages extraites</h3>
+            <a id="p2i-zip-link" class="btn btn-success" href="#" download>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Télécharger tout en ZIP
+            </a>
+          </div>
+          <div id="p2i-gallery-grid" class="organizer-grid"></div>
+        </div>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('pdf-to-img')">🔄 Traiter un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('pdf-to-img')">Outil suivant : Organiser & Fusionner ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: ORGANIZE & MERGE ================= -->
+    <section id="view-organize" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">📑 Organiser & Fusionner</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('organize')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('organize')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-organize" onclick="triggerFileInput('input-organize')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        <h3>Glissez vos fichiers PDF ici pour organiser ou fusionner</h3>
+        <p>Glissez-déposez les pages pour réordonner, pivoter, dupliquer ou supprimer</p>
+        <button class="btn btn-primary" type="button">Choisir un ou plusieurs PDF</button>
+        <input type="file" id="input-organize" multiple accept=".pdf" style="display:none;" onchange="handleOrganizeUpload(this.files)">
+      </div>
+
+      <div id="organize-panel" style="display:none;">
+        <div class="active-file-bar">
+          <div class="file-info-group">
+            <strong id="organize-total-pages">0 pages au total</strong>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary" onclick="rotateAllPages(90)" title="Pivoter toutes les pages de 90°">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Tourner tout à 90°
+            </button>
+            <button class="btn btn-secondary" onclick="triggerFileInput('input-organize')">
+              + Ajouter un autre PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Drag & Drop Grid -->
+        <div id="organize-pages-grid" class="organizer-grid"></div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeOrganizePdf()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Enregistrer et Télécharger le PDF Réorganisé
+        </button>
+      </div>
+
+      <div id="organize-result" style="display:none;"></div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('organize')">🔄 Réorganiser d'autres PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('organize')">Outil suivant : Éditeur Sejda ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: SEJDA-STYLE VISUAL EDITOR ================= -->
+    <section id="view-editor" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">✍️ Éditeur de texte Sejda</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('editor')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('editor')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-editor" onclick="triggerFileInput('input-editor')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        <h3>Glissez votre PDF pour modifier son texte</h3>
+        <p>Cliquez sur n'importe quel texte : sa police d'origine est automatiquement identifiée et conservée à la modification</p>
+        <button class="btn btn-primary" type="button">Ouvrir dans l'éditeur</button>
+        <input type="file" id="input-editor" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'editor')">
+      </div>
+
+      <div id="editor-panel" style="display:none;" class="editor-layout">
+        <!-- Toolbar -->
+        <div class="editor-toolbar">
+          <div class="tool-group">
+            <button class="tool-btn active" id="btn-tool-edit" onclick="setEditorTool('edit')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+              Modifier texte existant
+            </button>
+            <button class="tool-btn" id="btn-tool-add-text" onclick="setEditorTool('add-text')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Ajouter du texte
+            </button>
+            <button class="tool-btn" id="btn-tool-redact" onclick="setEditorTool('redact')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+              Effacer / Biffer (Whiteout)
+            </button>
+            <button class="tool-btn" id="btn-tool-highlight" onclick="setEditorTool('highlight')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 2-7 7-4-4 7-7z"/></svg>
+              Surligner
+            </button>
+            <button class="tool-btn" id="btn-tool-signature" onclick="openSignatureModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c3.5-3.5 6-3.5 9 0s5.5 3.5 9 0"/><path d="M14 9l3-3 4 4-3 3"/></svg>
+              Signer
+            </button>
+          </div>
+
+          <!-- Detected font pill indicator -->
+          <div id="editor-font-detected" style="display:none;"></div>
+
+          <!-- Formatting -->
+          <div class="tool-group">
+            <select id="editor-font-family" class="form-control" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;" onchange="updateEditorActiveFont()">
+              <option value="Arial">Arial (Sans-serif)</option>
+              <option value="Calibri">Calibri</option>
+              <option value="Times New Roman">Times New Roman (Serif)</option>
+              <option value="Courier New">Courier New (Mono)</option>
+              <option value="Segoe UI">Segoe UI</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+            <input type="number" id="editor-font-size" value="14" min="6" max="96" class="form-control" style="width: 60px; padding: 0.25rem 0.5rem; font-size: 0.85rem;" onchange="updateEditorActiveSize()">
+            <input type="color" id="editor-color" value="#000000" style="width: 32px; height: 30px; border: none; cursor: pointer; border-radius: 4px;" onchange="updateEditorActiveColor()">
+          </div>
+
+          <!-- Page Navigation & Direct Jump -->
+          <div class="tool-group" style="margin-left: auto;">
+            <div class="page-nav-group">
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="firstEditorPage()" title="Première page">|◀</button>
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="prevEditorPage()" title="Page précédente">◀</button>
+              <span style="font-size:0.85rem; font-weight:600;">Page</span>
+              <input type="number" id="editor-page-jump" class="page-jump-input" value="1" min="1" onchange="jumpToEditorPage(this.value)" onkeydown="if(event.key==='Enter') jumpToEditorPage(this.value)">
+              <span style="font-size:0.85rem; font-weight:600;">sur <span id="editor-page-total">1</span></span>
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="nextEditorPage()" title="Page suivante">▶</button>
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="lastEditorPage()" title="Dernière page">▶|</button>
+            </div>
+          </div>
+
+          <button class="btn btn-success" style="padding: 0.45rem 1rem;" onclick="saveAndApplyEditor()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Appliquer & Télécharger
+          </button>
+        </div>
+
+        <!-- Viewport / Canvas -->
+        <div class="editor-viewport" id="editor-viewport">
+          <div class="editor-canvas-wrapper" id="editor-canvas-wrapper">
+            <img id="editor-bg-img" class="editor-bg-img" src="" alt="Page PDF">
+            <div id="editor-overlay" class="editor-overlay" onclick="handleCanvasClick(event)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('editor')">🔄 Éditer un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('editor')">Outil suivant : Rogner / Crop ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: CROP PDF ================= -->
+    <section id="view-crop" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">✂️ Rogner / Crop</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('crop')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('crop')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-crop" onclick="triggerFileInput('input-crop')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg>
+        <h3>Glissez votre PDF pour rogner</h3>
+        <p>Ajustez les poignées ou supprimez les bordures blanches d'un clic</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF à rogner</button>
+        <input type="file" id="input-crop" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'crop')">
+      </div>
+
+      <div id="crop-panel" style="display:none;">
+        <div class="active-file-bar">
+          <div class="page-nav-group">
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="firstCropPage()" title="Première page">|◀</button>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="prevCropPage()" title="Page précédente">◀</button>
+            <span style="font-size:0.85rem; font-weight:600;">Page</span>
+            <input type="number" id="crop-page-jump" class="page-jump-input" value="1" min="1" onchange="jumpToCropPage(this.value)" onkeydown="if(event.key==='Enter') jumpToCropPage(this.value)">
+            <span style="font-size:0.85rem; font-weight:600;">sur <span id="crop-page-total">1</span></span>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="nextCropPage()" title="Page suivante">▶</button>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="lastCropPage()" title="Dernière page">▶|</button>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem;">
+            <button class="btn btn-secondary" onclick="autoDetectMarginsCrop()">
+              🪄 Supprimer marges blanches auto
+            </button>
+            <button class="btn btn-secondary" onclick="resetCropBox()">
+              ↺ Réinitialiser
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; margin: 1.5rem 0;">
+          <div class="cropper-container" id="cropper-container">
+            <img id="crop-bg-img" src="" alt="Page à rogner" style="display: block; max-width: 100%;">
+            <div id="crop-box" class="crop-box">
+              <div class="crop-handle tl" data-handle="tl"></div>
+              <div class="crop-handle tr" data-handle="tr"></div>
+              <div class="crop-handle bl" data-handle="bl"></div>
+              <div class="crop-handle br" data-handle="br"></div>
+              <div class="crop-handle tm" data-handle="tm"></div>
+              <div class="crop-handle bm" data-handle="bm"></div>
+              <div class="crop-handle ml" data-handle="ml"></div>
+              <div class="crop-handle mr" data-handle="mr"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid" style="align-items: center;">
+          <div class="form-group">
+            <label class="form-label">Application du rognage</label>
+            <select id="crop-apply-mode" class="form-control">
+              <option value="current">Rogner cette page uniquement</option>
+              <option value="all" selected>Appliquer le rognage à TOUTES les pages</option>
+            </select>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.25rem;" onclick="executeCropPdf()">
+              Appliquer le rognage et Télécharger
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('crop')">🔄 Rogner un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('crop')">Outil suivant : Compresser PDF ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: COMPRESS PDF ================= -->
+    <section id="view-compress" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🗜️ Compresser PDF</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('compress')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('compress')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-compress" onclick="triggerFileInput('input-compress')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        <h3>Glissez votre PDF à compresser</h3>
+        <p>Réduction de taille intelligente sans perte de lisibilité</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-compress" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'compress')">
+      </div>
+
+      <div id="compress-panel" style="display:none;">
+        <div class="active-file-bar">
+          <div class="file-info-group">
+            <strong id="compress-filename">document.pdf</strong>
+            <span class="badge-info" id="compress-filesize">0 Mo</span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Niveau de compression</label>
+            <select id="compress-level" class="form-control">
+              <option value="recommended" selected>Recommandé (Équilibre parfait taille / netteté)</option>
+              <option value="extreme">Forte / Extrême (Pour emails légers & seuil 2Mo)</option>
+              <option value="low">Légère (Nettoyage structurel sans compression d'images)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeCompressPdf()">
+          Compresser maintenant
+        </button>
+      </div>
+
+      <div id="compress-result" style="display:none;"></div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('compress')">🔄 Compresser un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('compress')">Outil suivant : Protéger & Chiffrer ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: PROTECT & UNLOCK ================= -->
+    <section id="view-protect" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🔒 Protéger & Chiffrer</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('protect')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('protect')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-protect" onclick="triggerFileInput('input-protect')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <h3>Glissez votre PDF à verrouiller</h3>
+        <p>Chiffrement robuste AES-256 bits</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-protect" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'protect')">
+      </div>
+
+      <div id="protect-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="protect-filename">document.pdf</strong>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Mot de passe pour ouvrir le document</label>
+            <input type="password" id="protect-user-pwd" class="form-control" placeholder="Entrez le mot de passe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mot de passe d'administration (optionnel)</label>
+            <input type="password" id="protect-owner-pwd" class="form-control" placeholder="Mot de passe propriétaire">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 1.5rem;">
+          <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+            <input type="checkbox" id="protect-allow-print" checked> Autoriser l'impression
+          </label>
+          <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+            <input type="checkbox" id="protect-allow-copy" checked> Autoriser la copie du texte
+          </label>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeProtectPdf()">
+          Chiffrer et Télécharger le PDF
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('protect')">🔄 Protéger un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('protect')">Outil suivant : Déverrouiller PDF ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: UNLOCK ================= -->
+    <section id="view-unlock" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🔓 Déverrouiller un PDF</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('unlock')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('unlock')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-unlock" onclick="triggerFileInput('input-unlock')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+        <h3>Glissez votre PDF protégé</h3>
+        <p>Supprimez la protection par mot de passe</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-unlock" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'unlock')">
+      </div>
+
+      <div id="unlock-panel" style="display:none;">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">Entrez le mot de passe actuel du fichier</label>
+          <input type="password" id="unlock-pwd" class="form-control" placeholder="Mot de passe actuel">
+        </div>
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeUnlockPdf()">
+          Supprimer la protection et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('unlock')">🔄 Déverrouiller un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('unlock')">Outil suivant : Ajouter un Filigrane ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: WATERMARK ================= -->
+    <section id="view-watermark" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">💧 Ajouter un Filigrane</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('watermark')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('watermark')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-watermark" onclick="triggerFileInput('input-watermark')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+        <h3>Glissez votre PDF ici</h3>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-watermark" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'watermark')">
+      </div>
+
+      <div id="watermark-panel" style="display:none;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Texte du filigrane</label>
+            <input type="text" id="wm-text" class="form-control" value="CONFIDENTIEL">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Taille police</label>
+            <input type="number" id="wm-size" class="form-control" value="50" min="20" max="120">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Couleur</label>
+            <input type="color" id="wm-color" value="#e53e3e" style="height:42px; width:100%; border:none; cursor:pointer;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Angle de rotation</label>
+            <select id="wm-rotation" class="form-control">
+              <option value="45" selected>45° (Diagonal)</option>
+              <option value="0">0° (Horizontal)</option>
+              <option value="90">90° (Vertical)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeWatermarkPdf()">
+          Appliquer le filigrane et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('watermark')">🔄 Ajouter filigrane sur un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('watermark')">Outil suivant : Numéroter les pages ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: PAGE NUMBERS ================= -->
+    <section id="view-page-numbers" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🔢 Numéroter les Pages</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('page-numbers')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('page-numbers')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-page-numbers" onclick="triggerFileInput('input-page-numbers')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+        <h3>Glissez votre PDF pour numéroter</h3>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-page-numbers" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'page-numbers')">
+      </div>
+
+      <div id="page-numbers-panel" style="display:none;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Format de numérotation</label>
+            <select id="pn-format" class="form-control">
+              <option value="Page {n} / {total}" selected>Page {n} / {total}</option>
+              <option value="{n} / {total}">{n} / {total}</option>
+              <option value="Page {n}">Page {n}</option>
+              <option value="- {n} -">- {n} -</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Position</label>
+            <select id="pn-position" class="form-control">
+              <option value="bottom-right" selected>En bas à droite</option>
+              <option value="bottom-center">En bas au centre</option>
+              <option value="bottom-left">En bas à gauche</option>
+              <option value="top-right">En haut à droite</option>
+              <option value="top-center">En haut au centre</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Commencer la numérotation à</label>
+            <input type="number" id="pn-start" class="form-control" value="1" min="1">
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executePageNumbersPdf()">
+          Numéroter et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('page-numbers')">🔄 Numéroter un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('page-numbers')">Outil suivant : PDF en Word (DOCX) ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: PDF TO WORD ================= -->
+    <section id="view-to-word" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">📝 PDF en Word (DOCX)</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('to-word')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('to-word')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-to-word" onclick="triggerFileInput('input-to-word')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        <h3>Glissez votre PDF à convertir en Word</h3>
+        <p>Extraction des textes et des titres vers un document .docx modifiable</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-to-word" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'to-word')">
+      </div>
+
+      <div id="to-word-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="to-word-filename">document.pdf</strong>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeToWord()">
+          Convertir en fichier Word (.docx)
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('to-word')">🔄 Convertir un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('to-word')">Outil suivant : Word en PDF ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: WORD TO PDF ================= -->
+    <section id="view-word-to-pdf" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">📄 Word en PDF (DOCX)</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('word-to-pdf')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('word-to-pdf')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-word-to-pdf" onclick="triggerFileInput('input-word-to-pdf')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="12" x2="12" y2="18"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
+        <h3>Glissez votre document Word (.docx) ici</h3>
+        <p>Conversion native ultra-rapide et fidèle en PDF (traitement 100% hors-ligne)</p>
+        <button class="btn btn-primary" type="button">Choisir un fichier Word</button>
+        <input type="file" id="input-word-to-pdf" accept=".docx,.doc" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'word-to-pdf')">
+      </div>
+
+      <div id="word-to-pdf-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="word-to-pdf-filename">document.docx</strong>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeWordToPdf()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Convertir en PDF et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('word-to-pdf')">🔄 Convertir un autre fichier Word</button>
+        <button class="btn btn-primary" onclick="goToNextTool('word-to-pdf')">Outil suivant : Découper / Diviser PDF ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: SPLIT PDF ================= -->
+    <section id="view-split" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">✂️ Découper / Diviser PDF</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('split')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('split')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-split" onclick="triggerFileInput('input-split')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+        <h3>Glissez le PDF à découper ou diviser</h3>
+        <p>Extrayez chaque page en fichier individuel ou définissez des plages personnalisées</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-split" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'split')">
+      </div>
+
+      <div id="split-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="split-filename">document.pdf</strong>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Mode de découpage</label>
+            <select id="split-mode" class="form-control" onchange="document.getElementById('split-ranges-group').style.display = this.value === 'custom' ? 'block' : 'none'">
+              <option value="all" selected>Toutes les pages (1 page = 1 fichier PDF en ZIP)</option>
+              <option value="custom">Plages de pages personnalisées</option>
+            </select>
+          </div>
+          <div class="form-group" id="split-ranges-group" style="display:none;">
+            <label class="form-label">Plages à extraire (ex: 1-3, 4-6, 8)</label>
+            <input type="text" id="split-ranges" class="form-control" placeholder="ex: 1-2, 3-5">
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeSplitPdf()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Découper et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('split')">🔄 Découper un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('split')">Outil suivant : Supprimer des pages ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: REMOVE PAGES ================= -->
+    <section id="view-remove-pages" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🗑️ Supprimer des Pages</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('remove-pages')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('remove-pages')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-remove-pages" onclick="triggerFileInput('input-remove-pages')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        <h3>Glissez votre PDF pour supprimer des pages</h3>
+        <p>Supprimez facilement les pages inutiles ou vides</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-remove-pages" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'remove-pages')">
+      </div>
+
+      <div id="remove-pages-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="remove-pages-filename">document.pdf</strong>
+        </div>
+
+        <div class="form-group" style="margin: 1.5rem 0;">
+          <label class="form-label">Numéros des pages à supprimer (ex: 2, 4-6, 10)</label>
+          <input type="text" id="remove-pages-input" class="form-control" placeholder="ex: 1, 3, 5-7">
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeRemovePages()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Supprimer les pages et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('remove-pages')">🔄 Supprimer sur un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('remove-pages')">Outil suivant : Aplatir PDF ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: FLATTEN PDF ================= -->
+    <section id="view-flatten" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">📋 Aplatir PDF (Flatten)</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('flatten')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('flatten')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-flatten" onclick="triggerFileInput('input-flatten')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        <h3>Glissez le PDF à aplatir</h3>
+        <p>Figez les formulaires remplis et signatures pour empêcher toute modification ultérieure</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-flatten" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'flatten')">
+      </div>
+
+      <div id="flatten-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="flatten-filename">document.pdf</strong>
+        </div>
+        <p style="margin: 1rem 0; color: var(--text-muted);">
+          L'aplatissement (flattening) convertit tous les champs de formulaire interactifs (AcroForms) et les calques d'annotations en éléments graphiques permanents non éditables.
+        </p>
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeFlattenPdf()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Aplatir le PDF et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('flatten')">🔄 Aplatir un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('flatten')">Outil suivant : PDF en Texte & Markdown ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: PDF TO TEXT & MARKDOWN ================= -->
+    <section id="view-pdf-to-text" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">📖 PDF en Texte & Markdown (IA / LLM)</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('pdf-to-text')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('pdf-to-text')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-pdf-to-text" onclick="triggerFileInput('input-pdf-to-text')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <h3>Glissez votre PDF pour extraire le texte</h3>
+        <p>Format texte brut .txt ou Markdown structuré .md optimisé pour les modèles de langage et IA</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-pdf-to-text" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'pdf-to-text')">
+      </div>
+
+      <div id="pdf-to-text-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="pdf-to-text-filename">document.pdf</strong>
+        </div>
+
+        <div class="form-group" style="margin: 1.5rem 0;">
+          <label class="form-label">Format de sortie</label>
+          <select id="pdf-to-text-format" class="form-control">
+            <option value="md" selected>Markdown structuré (.md) - Idéal pour IA / ChatGPT / Claude</option>
+            <option value="txt">Texte brut paginé (.txt)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executePdfToText()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Extraire et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('pdf-to-text')">🔄 Extraire un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('pdf-to-text')">Outil suivant : Métadonnées & RGPD ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: METADATA & SANITIZER ================= -->
+    <section id="view-metadata" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🏷️ Métadonnées & Anonymisation RGPD</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('metadata')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('metadata')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-metadata" onclick="triggerFileInput('input-metadata')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+        <h3>Glissez votre PDF pour inspecter ou modifier ses métadonnées</h3>
+        <p>Modifiez le titre, l'auteur ou purgez toutes les traces cachées pour conformité RGPD</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-metadata" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'metadata')">
+      </div>
+
+      <div id="metadata-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="metadata-filename">document.pdf</strong>
+        </div>
+
+        <div class="form-grid" style="margin: 1.5rem 0;">
+          <div class="form-group">
+            <label class="form-label">Titre du document</label>
+            <input type="text" id="meta-title" class="form-control" placeholder="Titre du PDF">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Auteur</label>
+            <input type="text" id="meta-author" class="form-control" placeholder="Auteur ou Société">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sujet</label>
+            <input type="text" id="meta-subject" class="form-control" placeholder="Objet du document">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mots-clés (séparés par des virgules)</label>
+            <input type="text" id="meta-keywords" class="form-control" placeholder="rapport, finance, 2026">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Créateur / Logiciel d'origine</label>
+            <input type="text" id="meta-creator" class="form-control" placeholder="ex: PDF Studio Pro">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-lg" style="flex: 1;" onclick="executeMetadataUpdate(false)">
+            Enregistrer les métadonnées
+          </button>
+          <button class="btn btn-secondary btn-lg" style="flex: 1; border-color: #ef4444; color: #ef4444;" onclick="executeMetadataUpdate(true)">
+            🛡️ Anonymiser & Purger (RGPD 1-Clic)
+          </button>
+        </div>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('metadata')">🔄 Éditer un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('metadata')">Outil suivant : Numérotation Bates Juridique ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: BATES NUMBERING ================= -->
+    <section id="view-bates" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">⚖️ Numérotation Bates Juridique</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('bates')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('bates')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-bates" onclick="triggerFileInput('input-bates')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        <h3>Glissez votre PDF pour indexation légale Bates</h3>
+        <p>Numérotation séquentielle certifiée pour dossiers juridiques, avocats et contentieux</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-bates" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'bates')">
+      </div>
+
+      <div id="bates-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="bates-filename">document.pdf</strong>
+        </div>
+
+        <div class="form-grid" style="margin: 1.5rem 0;">
+          <div class="form-group">
+            <label class="form-label">Préfixe de la pièce</label>
+            <input type="text" id="bates-prefix" class="form-control" value="PIECE-">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre de chiffres (zéros de remplissage)</label>
+            <input type="number" id="bates-digits" class="form-control" value="5" min="2" max="10">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Numéro initial</label>
+            <input type="number" id="bates-start" class="form-control" value="1" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Position sur la page</label>
+            <select id="bates-position" class="form-control">
+              <option value="bottom-right" selected>En bas à droite</option>
+              <option value="bottom-center">En bas au centre</option>
+              <option value="top-right">En haut à droite</option>
+              <option value="top-center">En haut au centre</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeBatesStamping()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Appliquer l'indexation Bates et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('bates')">🔄 Indexer un autre document</button>
+        <button class="btn btn-primary" onclick="goToNextTool('bates')">Outil suivant : Pivoter les pages ▶</button>
+      </div>
+    </section>
+
+
+    <!-- ================= TOOL: FAST ROTATE ================= -->
+    <section id="view-rotate-fast" class="workspace-view">
+      <div class="workspace-nav-bar">
+        <div class="workspace-nav-left">
+          <button class="nav-btn-home" onclick="switchView('dashboard')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Accueil
+          </button>
+          <span class="nav-breadcrumb-sep">/</span>
+          <span class="nav-breadcrumb-current">🔄 Pivoter les pages</span>
+        </div>
+        <div class="workspace-nav-right">
+          <button class="nav-step-btn" onclick="goToPrevTool('rotate-fast')">◀ Précédent</button>
+          <select class="quick-tool-select" onchange="if(this.value) switchView(this.value)">
+            <option value="" disabled selected>⚡ Changer d'outil...</option>
+            <option value="img-to-pdf">🖼️ Images en PDF</option>
+            <option value="pdf-to-img">📸 PDF en Images</option>
+            <option value="organize">📑 Organiser & Fusionner</option>
+            <option value="editor">✍️ Éditeur Sejda</option>
+            <option value="crop">✂️ Rogner / Crop</option>
+            <option value="compress">🗜️ Compresser PDF</option>
+            <option value="protect">🔒 Protéger</option>
+            <option value="unlock">🔓 Déverrouiller</option>
+            <option value="watermark">💧 Filigrane</option>
+            <option value="page-numbers">🔢 Numéroter</option>
+            <option value="to-word">📝 PDF vers Word</option>
+            <option value="word-to-pdf">📄 Word vers PDF</option>
+            <option value="split">✂️ Découper / Diviser</option>
+            <option value="remove-pages">🗑️ Supprimer Pages</option>
+            <option value="flatten">📋 Aplatir PDF</option>
+            <option value="pdf-to-text">📖 PDF en Texte / MD</option>
+            <option value="metadata">🏷️ Métadonnées & RGPD</option>
+            <option value="bates">⚖️ Numérotation Bates</option>
+            <option value="rotate-fast">🔄 Pivoter les pages</option>
+          </select>
+          <button class="nav-step-btn" onclick="goToNextTool('rotate-fast')">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone-rotate-fast" onclick="triggerFileInput('input-rotate-fast')">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        <h3>Glissez votre PDF pour pivoter les pages</h3>
+        <p>Rotation rapide 90°, 180° ou 270° de toutes les pages ou par parité</p>
+        <button class="btn btn-primary" type="button">Choisir un PDF</button>
+        <input type="file" id="input-rotate-fast" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'rotate-fast')">
+      </div>
+
+      <div id="rotate-fast-panel" style="display:none;">
+        <div class="active-file-bar">
+          <strong id="rotate-fast-filename">document.pdf</strong>
+        </div>
+
+        <div class="form-grid" style="margin: 1.5rem 0;">
+          <div class="form-group">
+            <label class="form-label">Angle de rotation</label>
+            <select id="rotate-angle" class="form-control">
+              <option value="90" selected>90° vers la droite (Sens horaire)</option>
+              <option value="180">180° (Retourner la page)</option>
+              <option value="270">90° vers la gauche (Sens anti-horaire)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pages à faire pivoter</label>
+            <select id="rotate-pages-mode" class="form-control">
+              <option value="all" selected>Toutes les pages du document</option>
+              <option value="odd">Pages impaires uniquement (1, 3, 5...)</option>
+              <option value="even">Pages paires uniquement (2, 4, 6...)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeFastRotate()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Pivoter et Télécharger
+        </button>
+      </div>
+
+      <div class="workspace-footer-nav">
+        <button class="btn btn-secondary" onclick="switchView('dashboard')">🏠 Revenir à l'accueil</button>
+        <button class="btn btn-secondary" onclick="resetCurrentWorkspace('rotate-fast')">🔄 Pivoter un autre PDF</button>
+        <button class="btn btn-primary" onclick="goToNextTool('rotate-fast')">Premier outil : Images en PDF ▶</button>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- SIGNATURE MODAL -->
+  <div class="modal-overlay" id="modal-signature">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Dessiner ou Importer votre Signature</h3>
+        <button class="btn-icon" onclick="closeSignatureModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <canvas id="sig-pad" class="sig-canvas"></canvas>
+        <div style="display: flex; justify-content: space-between; margin-top: 0.75rem;">
+          <button class="btn btn-secondary" onclick="clearSignaturePad()">Effacer le tracé</button>
+          <label class="btn btn-secondary" style="cursor: pointer;">
+            Importer image PNG
+            <input type="file" accept="image/png,image/jpeg" style="display:none;" onchange="loadSignatureImage(event)">
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeSignatureModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="applySignatureToPage()">Insérer la signature</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- JAVASCRIPT SCRIPTS -->
+  <script src="js/pdf-lib.min.js"></script>
+  <script src="js/pdf.min.js"></script>
+  <script src="js/mobile_engine.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/organizer.js"></script>
+  <script src="js/cropper.js"></script>
+  <script src="js/img_tools.js"></script>
+</body>
+</html>

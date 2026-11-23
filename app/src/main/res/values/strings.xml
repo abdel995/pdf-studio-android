@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PDF Studio Pro</string>
+    <string name="file_saved">Fichier enregistré dans Téléchargements : %s</string>
+    <string name="error_saving">Erreur lors de l\'enregistrement du fichier</string>
+</resources>
