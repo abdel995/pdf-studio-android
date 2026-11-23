@@ -28,6 +28,9 @@ import androidx.core.content.ContextCompat;
 
 import com.pdfstudio.pro.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
@@ -136,12 +139,25 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
 
-                String[] acceptTypes = fileChooserParams.getAcceptTypes();
-                if (acceptTypes != null && acceptTypes.length > 0 && !acceptTypes[0].isEmpty()) {
-                    intent.setType(acceptTypes[0]);
-                    if (acceptTypes.length > 1) {
-                        intent.putExtra(Intent.EXTRA_MIME_TYPES, acceptTypes);
+                // Convert file extensions (e.g. ".pdf") into valid Android MIME types (e.g. "application/pdf")
+                String[] rawAcceptTypes = fileChooserParams.getAcceptTypes();
+                List<String> validMimes = new ArrayList<>();
+                if (rawAcceptTypes != null) {
+                    for (String raw : rawAcceptTypes) {
+                        if (raw != null && !raw.trim().isEmpty()) {
+                            String m = resolveMimeType(raw);
+                            if (!validMimes.contains(m) && !m.equals("*/*")) {
+                                validMimes.add(m);
+                            }
+                        }
                     }
+                }
+
+                if (validMimes.size() == 1) {
+                    intent.setType(validMimes.get(0));
+                } else if (validMimes.size() > 1) {
+                    intent.setType("*/*");
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, validMimes.toArray(new String[0]));
                 } else {
                     intent.setType("*/*");
                 }
@@ -153,13 +169,30 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     fileChooserLauncher.launch(Intent.createChooser(intent, "Choisir un document ou une image"));
                 } catch (Exception e) {
-                    uploadMessage = null;
+                    if (uploadMessage != null) {
+                        uploadMessage.onReceiveValue(null);
+                        uploadMessage = null;
+                    }
                     Toast.makeText(MainActivity.this, "Impossible d'ouvrir le s\u00e9lecteur de fichiers", Toast.LENGTH_SHORT).show();
                     return false;
                 }
                 return true;
             }
         });
+    }
+
+    private String resolveMimeType(String raw) {
+        if (raw == null) return "*/*";
+        raw = raw.trim().toLowerCase();
+        if (raw.isEmpty() || raw.equals("*/*")) return "*/*";
+        if (raw.equals(".pdf") || raw.contains("pdf")) return "application/pdf";
+        if (raw.equals(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (raw.equals(".doc")) return "application/msword";
+        if (raw.startsWith("image/") || raw.equals(".png") || raw.equals(".jpg") || raw.equals(".jpeg") || raw.equals(".webp") || raw.equals(".bmp")) {
+            return raw.startsWith("image/") ? raw : "image/*";
+        }
+        if (raw.contains("/")) return raw;
+        return "*/*";
     }
 
     private void checkAndRequestPermissions() {

@@ -164,9 +164,22 @@ function filterTools() {
   });
 }
 
-function triggerFileInput(id) {
+let _lastFileTriggerTime = 0;
+function triggerFileInput(id, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const now = Date.now();
+  if (now - _lastFileTriggerTime < 500) {
+    return; // Prevent duplicate immediate clicks from event bubbling
+  }
+  _lastFileTriggerTime = now;
   const el = document.getElementById(id);
-  if (el) el.click();
+  if (el) {
+    // Reset value so selecting the same file again triggers onchange
+    el.value = '';
+    el.click();
+  }
 }
 
 function showToast(message, type = 'info') {
