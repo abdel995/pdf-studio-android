@@ -412,5 +412,55 @@ const MobileEngine = {
     }
 
     return pages;
+  },
+
+  // 13. Batch Images to PDF (Merge or Separate ZIP)
+  batchImagesToPdf: async function(imageFiles, pageSize = 'fit', orientation = 'auto', margin = 0, mergeSingle = true) {
+    if (mergeSingle || imageFiles.length === 1) {
+      return {
+        bytes: await this.imagesToPdf(imageFiles, pageSize, orientation, margin),
+        isZip: false
+      };
+    } else {
+      const zip = new JSZip();
+      for (let i = 0; i < imageFiles.length; i++) {
+        const img = imageFiles[i];
+        const baseName = img.name.substring(0, img.name.lastIndexOf('.')) || `image_${i+1}`;
+        const singlePdfBytes = await this.imagesToPdf([img], pageSize, orientation, margin);
+        zip.file(`${baseName}.pdf`, singlePdfBytes);
+      }
+      const zipBytes = await zip.generateAsync({ type: 'uint8array' });
+      return {
+        bytes: zipBytes,
+        isZip: true
+      };
+    }
+  },
+
+  // 14. Batch PDF to Images (Multiple PDFs to ZIP)
+  batchPdfToImages: async function(pdfFiles, scale = 2.0) {
+    const zip = new JSZip();
+    const allGalleryPages = [];
+
+    for (let fIdx = 0; fIdx < pdfFiles.length; fIdx++) {
+      const pdfFile = pdfFiles[fIdx];
+      const baseName = pdfFile.name.substring(0, pdfFile.name.lastIndexOf('.')) || `doc_${fIdx+1}`;
+      const pages = await this.pdfToImages(pdfFile, scale);
+
+      pages.forEach(p => {
+        allGalleryPages.push({
+          ...p,
+          file_name: `${baseName}_p${p.page_number}.png`
+        });
+        const base64Data = p.dataUrl.split(',')[1];
+        zip.file(`${baseName}_p${p.page_number}.png`, base64Data, { base64: true });
+      });
+    }
+
+    const zipBytes = await zip.generateAsync({ type: 'uint8array' });
+    return {
+      pages: allGalleryPages,
+      zipBytes: zipBytes
+    };
   }
 };

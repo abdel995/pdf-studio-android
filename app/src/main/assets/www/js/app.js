@@ -11,6 +11,73 @@ if (currentTheme === 'dark') {
 // Active single file state for single-file tools (stores native File objects)
 let activeFileMap = {};
 
+// Active batch files state for multi-file tools
+let batchFilesMap = {
+  'word-to-pdf': [],
+  'to-word': [],
+  'pdf-to-img': []
+};
+
+function handleBatchPdfUpload(files, tool) {
+  if (!files || files.length === 0) return;
+  if (!batchFilesMap[tool]) batchFilesMap[tool] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    f.base_name = f.name.substring(0, f.name.lastIndexOf('.')) || f.name;
+    batchFilesMap[tool].push(f);
+  }
+  activeFileMap[tool] = batchFilesMap[tool][0];
+
+  document.getElementById(`dropzone-${tool}`).style.display = 'none';
+  document.getElementById(`${tool}-panel`).style.display = 'block';
+
+  renderBatchFileList(tool);
+  showToast(`${files.length} document(s) ajouté(s)`);
+}
+
+function renderBatchFileList(tool) {
+  const container = document.getElementById(`${tool}-file-list`);
+  const nameEl = document.getElementById(`${tool}-filename`) || document.getElementById(`${tool}-name`);
+  const files = batchFilesMap[tool] || [];
+
+  if (nameEl) {
+    nameEl.textContent = `${files.length} document(s) sélectionné(s)`;
+  }
+
+  if (!container) return;
+  container.innerHTML = '';
+
+  files.forEach((f, idx) => {
+    const item = document.createElement('div');
+    item.className = 'batch-file-item';
+    const sizeStr = f.size > 1024*1024 ? `${(f.size / (1024*1024)).toFixed(2)} Mo` : `${(f.size / 1024).toFixed(0)} Ko`;
+    item.innerHTML = `
+      <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
+        <span style="font-weight:600; color:var(--primary);">${idx + 1}.</span>
+        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${f.name}">${f.name}</span>
+        <span style="font-size:0.75rem; color:var(--text-muted);">(${sizeStr})</span>
+      </div>
+      <button type="button" class="batch-file-remove" onclick="removeBatchFile('${tool}', ${idx})" title="Retirer">🗑️</button>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function removeBatchFile(tool, idx) {
+  if (batchFilesMap[tool]) {
+    batchFilesMap[tool].splice(idx, 1);
+    if (batchFilesMap[tool].length === 0) {
+      document.getElementById(`dropzone-${tool}`).style.display = 'block';
+      document.getElementById(`${tool}-panel`).style.display = 'none';
+      delete activeFileMap[tool];
+    } else {
+      activeFileMap[tool] = batchFilesMap[tool][0];
+      renderBatchFileList(tool);
+    }
+  }
+}
+
 const ALL_TOOLS = [
   { id: 'img-to-pdf', name: 'Images en PDF', icon: '🖼️' },
   { id: 'pdf-to-img', name: 'PDF en Images', icon: '📸' },
@@ -399,16 +466,19 @@ async function executeImagesToPdf() {
   const pageSize = document.getElementById('img-page-size').value;
   const orientation = document.getElementById('img-orientation').value;
   const margin = parseInt(document.getElementById('img-margin').value, 10);
+  const mergeSingle = document.querySelector('input[name="img-batch-mode"]:checked')?.value !== 'separate';
 
-  showToast('Conversion des images en PDF...');
+  showToast(mergeSingle ? 'Conversion des images en PDF unique...' : 'Création des PDF séparés (ZIP)...');
   try {
-    const bytes = await MobileEngine.imagesToPdf(selectedImages, pageSize, orientation, margin);
+    const res = await MobileEngine.batchImagesToPdf(selectedImages, pageSize, orientation, margin, mergeSingle);
     const firstImg = selectedImages[0].name;
     const baseName = firstImg.substring(0, firstImg.lastIndexOf('.')) || 'Images_Converties';
-    const dlName = `${baseName}.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
+    const dlName = res.isZip ? `${baseName}_pdf_separes.zip` : `${baseName}.pdf`;
+    const mime = res.isZip ? 'application/zip' : 'application/pdf';
+
+    MobileEngine.saveFile(res.bytes, dlName, mime);
     renderResultBanner('img-result', dlName);
-    showToast('PDF créé avec succès !');
+    showToast('Conversion terminée avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
   }
@@ -416,26 +486,32 @@ async function executeImagesToPdf() {
 
 // 11. PDF to Images
 async function executePdfToImages() {
-  const file = activeFileMap['pdf-to-img'];
-  if (!file) return;
+  const batch = (batchFilesMap['pdf-to-img'] && batchFilesMap['pdf-to-img'].length > 0)
+    ? batchFilesMap['pdf-to-img']
+    : (activeFileMap['pdf-to-img'] ? [activeFileMap['pdf-to-img']] : []);
+
+  if (batch.length === 0) {
+    showToast('Veuillez sélectionner au moins un fichier PDF');
+    return;
+  }
 
   showToast('Extraction des pages en images...');
   try {
-    const pages = await MobileEngine.pdfToImages(file, 2.0);
+    const res = await MobileEngine.batchPdfToImages(batch, 2.0);
     const sec = document.getElementById('p2i-gallery-section');
     const grid = document.getElementById('p2i-gallery-grid');
     grid.innerHTML = '';
 
-    pages.forEach(p => {
+    res.pages.forEach(p => {
       const card = document.createElement('div');
       card.className = 'organizer-card';
       card.innerHTML = `
         <div class="page-thumb-container">
-          <img src="${p.thumbnail}" class="page-thumb-img" alt="Page ${p.page_number}">
+          <img src="${p.thumbnail}" class="page-thumb-img" alt="${p.file_name}">
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5rem;">
-          <span class="page-num-tag">Page ${p.page_number}</span>
-          <button class="btn btn-secondary" style="font-size:0.75rem; padding:0.25rem 0.5rem;" onclick="downloadDataUrl('${p.dataUrl}', '${file.base_name}_p${p.page_number}.png')">
+          <span class="page-num-tag" style="font-size:0.75rem;">${p.file_name}</span>
+          <button class="btn btn-secondary" style="font-size:0.75rem; padding:0.25rem 0.5rem;" onclick="downloadDataUrl('${p.dataUrl}', '${p.file_name}')">
             Enregistrer
           </button>
         </div>
@@ -443,12 +519,25 @@ async function executePdfToImages() {
       grid.appendChild(card);
     });
 
+    // Save ZIP containing all images
+    const baseName = batch[0].base_name || 'PDF_Images';
+    const zipName = `${baseName}_images.zip`;
+    MobileEngine.saveFile(res.zipBytes, zipName, 'application/zip');
+
     sec.style.display = 'block';
     sec.scrollIntoView({ behavior: 'smooth' });
-    showToast(`${pages.length} pages extraites avec succès !`);
+    showToast(`${res.pages.length} pages extraites et enregistrées en ZIP !`);
   } catch (err) {
     showToast('Erreur : ' + err.message);
   }
+}
+
+// 12. Word to PDF / PDF to Word placeholder mobile handlers
+async function executeWordToPdf() {
+  showToast('Conversion Word vers PDF en cours...');
+}
+async function executeToWord() {
+  showToast('Conversion PDF vers Word en cours...');
 }
 
 function downloadDataUrl(dataUrl, filename) {

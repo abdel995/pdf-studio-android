@@ -330,6 +330,20 @@
           </div>
         </div>
 
+        <div class="form-group" style="margin: 1.5rem 0; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <label class="form-label" style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Mode de sortie pour les images multiples :</label>
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="img-batch-mode" id="img-mode-single" value="single" checked>
+              <span>📄 <strong>Un seul PDF combiné</strong> (Toutes les images réunies)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="img-batch-mode" id="img-mode-separate" value="separate">
+              <span>📦 <strong>Chaque image en fichier PDF séparé</strong> (Archive ZIP)</span>
+            </label>
+          </div>
+        </div>
+
         <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeImagesToPdf()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
           Générer et Télécharger le PDF
@@ -387,21 +401,23 @@
 
       <div class="dropzone" id="dropzone-pdf-to-img" onclick="triggerFileInput('input-pdf-to-img')">
         <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-        <h3>Glissez votre PDF ici</h3>
-        <p>Extraction des pages en images haute résolution</p>
-        <button class="btn btn-primary" type="button">Choisir un PDF</button>
-        <input type="file" id="input-pdf-to-img" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'pdf-to-img')">
+        <h3>Glissez un ou plusieurs PDF ici</h3>
+        <p>Extraction des pages en images haute résolution (sélection multiple autorisée)</p>
+        <button class="btn btn-primary" type="button">Choisir des PDF</button>
+        <input type="file" id="input-pdf-to-img" multiple accept=".pdf" style="display:none;" onchange="handleBatchPdfUpload(this.files, 'pdf-to-img')">
       </div>
 
       <div id="pdf-to-img-panel" style="display:none;">
         <div class="active-file-bar">
           <div class="file-info-group">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <strong id="pdf-to-img-name">document.pdf</strong>
+            <strong id="pdf-to-img-name">0 document(s) sélectionné(s)</strong>
             <span class="badge-info" id="pdf-to-img-pages">0 pages</span>
           </div>
-          <button class="btn btn-secondary" onclick="triggerFileInput('input-pdf-to-img')">Changer de fichier</button>
+          <button class="btn btn-secondary" onclick="triggerFileInput('input-pdf-to-img')">+ Ajouter d'autres PDF</button>
         </div>
+
+        <div id="pdf-to-img-file-list" class="batch-file-list"></div>
 
         <div class="form-grid">
           <div class="form-group">
@@ -1208,16 +1224,34 @@
 
       <div class="dropzone" id="dropzone-to-word" onclick="triggerFileInput('input-to-word')">
         <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-        <h3>Glissez votre PDF à convertir en Word</h3>
-        <p>Extraction des textes et des titres vers un document .docx modifiable</p>
-        <button class="btn btn-primary" type="button">Choisir un PDF</button>
-        <input type="file" id="input-to-word" accept=".pdf" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'to-word')">
+        <h3>Glissez un ou plusieurs PDF à convertir en Word</h3>
+        <p>Extraction vers documents .docx modifiables (sélection multiple autorisée)</p>
+        <button class="btn btn-primary" type="button">Choisir des PDF</button>
+        <input type="file" id="input-to-word" multiple accept=".pdf" style="display:none;" onchange="handleBatchPdfUpload(this.files, 'to-word')">
       </div>
 
       <div id="to-word-panel" style="display:none;">
         <div class="active-file-bar">
-          <strong id="to-word-filename">document.pdf</strong>
+          <strong id="to-word-filename">0 document(s) sélectionné(s)</strong>
+          <button class="btn btn-secondary" onclick="triggerFileInput('input-to-word')">+ Ajouter d'autres PDF</button>
         </div>
+
+        <div id="to-word-file-list" class="batch-file-list"></div>
+
+        <div class="form-group" style="margin: 1.5rem 0; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <label class="form-label" style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Mode de sortie Word :</label>
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="to-word-mode" id="to-word-mode-separate" value="separate" checked>
+              <span>📦 <strong>Chaque PDF en fichier Word séparé</strong> (Archive ZIP si multiples)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="to-word-mode" id="to-word-mode-single" value="single">
+              <span>📄 <strong>Un seul document Word fusionné (.docx)</strong> (Tous les PDF réunis)</span>
+            </label>
+          </div>
+        </div>
+
         <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeToWord()">
           Convertir en fichier Word (.docx)
         </button>
@@ -1272,16 +1306,34 @@
 
       <div class="dropzone" id="dropzone-word-to-pdf" onclick="triggerFileInput('input-word-to-pdf')">
         <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="12" x2="12" y2="18"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
-        <h3>Glissez votre document Word (.docx) ici</h3>
-        <p>Conversion native ultra-rapide et fidèle en PDF (traitement 100% hors-ligne)</p>
-        <button class="btn btn-primary" type="button">Choisir un fichier Word</button>
-        <input type="file" id="input-word-to-pdf" accept=".docx,.doc" style="display:none;" onchange="handleSinglePdfUpload(this.files, 'word-to-pdf')">
+        <h3>Glissez vos documents Word (.docx) ici</h3>
+        <p>Conversion native ultra-rapide et fidèle en PDF (sélection multiple autorisée)</p>
+        <button class="btn btn-primary" type="button">Choisir des fichiers Word</button>
+        <input type="file" id="input-word-to-pdf" multiple accept=".docx,.doc" style="display:none;" onchange="handleBatchPdfUpload(this.files, 'word-to-pdf')">
       </div>
 
       <div id="word-to-pdf-panel" style="display:none;">
         <div class="active-file-bar">
-          <strong id="word-to-pdf-filename">document.docx</strong>
+          <strong id="word-to-pdf-filename">0 document(s) sélectionné(s)</strong>
+          <button class="btn btn-secondary" onclick="triggerFileInput('input-word-to-pdf')">+ Ajouter d'autres fichiers Word</button>
         </div>
+
+        <div id="word-to-pdf-file-list" class="batch-file-list"></div>
+
+        <div class="form-group" style="margin: 1.5rem 0; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <label class="form-label" style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Mode de sortie PDF :</label>
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="word-to-pdf-mode" id="w2p-mode-single" value="single" checked>
+              <span>📄 <strong>Un seul PDF fusionné</strong> (Tous les documents Word réunis)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="word-to-pdf-mode" id="w2p-mode-separate" value="separate">
+              <span>📦 <strong>Chaque fichier converti séparément</strong> (Archive ZIP si multiples)</span>
+            </label>
+          </div>
+        </div>
+
         <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="executeWordToPdf()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
           Convertir en PDF et Télécharger
@@ -1888,6 +1940,7 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- JAVASCRIPT SCRIPTS -->
+  <script src="js/jszip.min.js"></script>
   <script src="js/pdf-lib.min.js"></script>
   <script src="js/pdf.min.js"></script>
   <script src="js/mobile_engine.js"></script>
