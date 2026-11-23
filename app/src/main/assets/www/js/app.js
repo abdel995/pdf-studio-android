@@ -8,6 +8,16 @@ if (currentTheme === 'dark') {
   document.documentElement.setAttribute('data-theme', 'dark');
 }
 
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // Active single file state for single-file tools (stores native File objects)
 let activeFileMap = {};
 
@@ -52,10 +62,11 @@ function renderBatchFileList(tool) {
     const item = document.createElement('div');
     item.className = 'batch-file-item';
     const sizeStr = f.size > 1024*1024 ? `${(f.size / (1024*1024)).toFixed(2)} Mo` : `${(f.size / 1024).toFixed(0)} Ko`;
+    const safeName = escapeHtml(f.name);
     item.innerHTML = `
       <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
         <span style="font-weight:600; color:var(--primary);">${idx + 1}.</span>
-        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${f.name}">${f.name}</span>
+        <span dir="auto" class="filename-text" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; unicode-bidi: plaintext;" title="${safeName}">${safeName}</span>
         <span style="font-size:0.75rem; color:var(--text-muted);">(${sizeStr})</span>
       </div>
       <button type="button" class="batch-file-remove" onclick="removeBatchFile('${tool}', ${idx})" title="Retirer">🗑️</button>
@@ -203,13 +214,14 @@ function renderResultBanner(containerId, downloadName, customHtml = '') {
   const container = document.getElementById(containerId);
   if (!container) return;
 
+  const safeName = escapeHtml(downloadName);
   container.innerHTML = `
     <div class="result-banner">
       <h2>🎉 Traitement Terminé avec Succès !</h2>
-      <p>Votre document <strong>${downloadName}</strong> a été généré et enregistré dans votre dossier <strong>Téléchargements</strong>.</p>
+      <p>Votre document <strong dir="auto" class="filename-text">${safeName}</strong> a été généré et enregistré dans votre dossier <strong>Téléchargements</strong>.</p>
       ${customHtml}
       <div class="result-actions" style="margin-top: 1rem;">
-        <button class="btn btn-white btn-lg" onclick="showToast('Fichier disponible dans Téléchargements : ${downloadName}')">
+        <button class="btn btn-white btn-lg" onclick="showToast('Fichier disponible dans Téléchargements : ' + encodeURIComponent('${encodeURIComponent(downloadName)}'))">
           ✓ Fichier Enregistré
         </button>
       </div>

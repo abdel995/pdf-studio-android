@@ -1264,3 +1264,9 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Arabic & Bidirectional Text Support */
+[dir="auto"], .filename-text, .batch-file-item span, .active-file-bar strong, .result-banner strong {
+  unicode-bidi: plaintext;
+  text-align: start;
+}

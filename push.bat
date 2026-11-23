@@ -9,10 +9,16 @@ echo.
 
 where git >nul 2>&1
 if %errorlevel% neq 0 (
-    if exist "%LOCALAPPDATA%\Programs\MinGit\cmd\git.exe" (
+    if exist "%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd\git.exe" (
+        set "PATH=%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd;%PATH%"
+    ) else if exist "%ProgramFiles%\Git\cmd\git.exe" (
+        set "PATH=%ProgramFiles%\Git\cmd;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Programs\MinGit\cmd\git.exe" (
         set "PATH=%LOCALAPPDATA%\Programs\MinGit\cmd;%PATH%"
     ) else (
-        echo [ERREUR] Git n'est pas détecté.
+        echo [ERREUR] Git n'est pas détecté sur ce système.
         pause
         exit /b 1
     )

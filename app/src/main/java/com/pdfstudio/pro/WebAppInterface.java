@@ -52,6 +52,14 @@ public class WebAppInterface {
     @JavascriptInterface
     public void saveBase64File(String base64Data, String fileName, String mimeType) {
         try {
+            String safeFileName = (fileName != null ? fileName.trim() : "");
+            // Remove illegal filesystem characters but preserve all Unicode and Arabic characters
+            safeFileName = safeFileName.replaceAll("[\\\\/*?:\"<>|]", "").trim();
+            if (safeFileName.isEmpty()) {
+                safeFileName = "document.pdf";
+            }
+            final String finalFileName = safeFileName;
+
             String cleanData = base64Data;
             if (cleanData.contains(",")) {
                 cleanData = cleanData.split(",")[1];
@@ -62,7 +70,7 @@ public class WebAppInterface {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ContentValues values = new ContentValues();
-                values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                values.put(MediaStore.MediaColumns.DISPLAY_NAME, finalFileName);
                 values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
                 values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PDFStudioPro");
 
@@ -79,7 +87,7 @@ public class WebAppInterface {
                 File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                 File appDir = new File(downloadsDir, "PDFStudioPro");
                 if (!appDir.exists()) appDir.mkdirs();
-                File destFile = new File(appDir, fileName);
+                File destFile = new File(appDir, finalFileName);
 
                 try (FileOutputStream fos = new FileOutputStream(destFile)) {
                     fos.write(fileBytes);
@@ -90,9 +98,9 @@ public class WebAppInterface {
 
             final Uri finalUri = fileUri;
             activity.runOnUiThread(() -> {
-                Toast.makeText(activity, "Fichier enregistr\u00e9 : " + fileName, Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "Fichier enregistr\u00e9 : " + finalFileName, Toast.LENGTH_LONG).show();
                 if (finalUri != null) {
-                    showDownloadNotification(fileName, finalUri, mimeType);
+                    showDownloadNotification(finalFileName, finalUri, mimeType);
                 }
             });
 
