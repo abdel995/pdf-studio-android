@@ -51,54 +51,57 @@ public class WebAppInterface {
 
     @JavascriptInterface
     public void saveBase64File(String base64Data, String fileName, String mimeType) {
-        activity.runOnUiThread(() -> {
-            try {
-                if (base64Data.contains(",")) {
-                    base64Data = base64Data.split(",")[1];
-                }
-                byte[] fileBytes = Base64.decode(base64Data, Base64.DEFAULT);
+        try {
+            String cleanData = base64Data;
+            if (cleanData.contains(",")) {
+                cleanData = cleanData.split(",")[1];
+            }
+            byte[] fileBytes = Base64.decode(cleanData, Base64.DEFAULT);
 
-                Uri fileUri = null;
+            Uri fileUri = null;
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    ContentValues values = new ContentValues();
-                    values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
-                    values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
-                    values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PDFStudioPro");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PDFStudioPro");
 
-                    fileUri = activity.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                    if (fileUri != null) {
-                        try (OutputStream out = activity.getContentResolver().openOutputStream(fileUri)) {
-                            if (out != null) {
-                                out.write(fileBytes);
-                                out.flush();
-                            }
+                fileUri = activity.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (fileUri != null) {
+                    try (OutputStream out = activity.getContentResolver().openOutputStream(fileUri)) {
+                        if (out != null) {
+                            out.write(fileBytes);
+                            out.flush();
                         }
                     }
-                } else {
-                    File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                    File appDir = new File(downloadsDir, "PDFStudioPro");
-                    if (!appDir.exists()) appDir.mkdirs();
-                    File destFile = new File(appDir, fileName);
-
-                    try (FileOutputStream fos = new FileOutputStream(destFile)) {
-                        fos.write(fileBytes);
-                        fos.flush();
-                    }
-                    fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", destFile);
                 }
+            } else {
+                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File appDir = new File(downloadsDir, "PDFStudioPro");
+                if (!appDir.exists()) appDir.mkdirs();
+                File destFile = new File(appDir, fileName);
 
-                Toast.makeText(activity, "Fichier enregistr\u00e9 : " + fileName, Toast.LENGTH_LONG).show();
-
-                if (fileUri != null) {
-                    showDownloadNotification(fileName, fileUri, mimeType);
+                try (FileOutputStream fos = new FileOutputStream(destFile)) {
+                    fos.write(fileBytes);
+                    fos.flush();
                 }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(activity, "Erreur enregistrement : " + e.getMessage(), Toast.LENGTH_LONG).show();
+                fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", destFile);
             }
-        });
+
+            final Uri finalUri = fileUri;
+            activity.runOnUiThread(() -> {
+                Toast.makeText(activity, "Fichier enregistr\u00e9 : " + fileName, Toast.LENGTH_LONG).show();
+                if (finalUri != null) {
+                    showDownloadNotification(fileName, finalUri, mimeType);
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            activity.runOnUiThread(() -> {
+                Toast.makeText(activity, "Erreur enregistrement : " + e.getMessage(), Toast.LENGTH_LONG).show();
+            });
+        }
     }
 
     private void showDownloadNotification(String fileName, Uri fileUri, String mimeType) {
