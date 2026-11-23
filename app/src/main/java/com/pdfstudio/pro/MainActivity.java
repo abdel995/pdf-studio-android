@@ -1,6 +1,7 @@
 package com.pdfstudio.pro;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -9,16 +10,19 @@ import android.os.Bundle;
 import android.view.View;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebChromeClient.FileChooserParams;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             result -> {
                 if (uploadMessage == null) return;
                 Uri[] results = null;
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                     if (result.getData().getClipData() != null) {
                         int count = result.getData().getClipData().getItemCount();
                         results = new Uri[count];
@@ -113,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
                 if (uploadMessage != null) {
                     uploadMessage.onReceiveValue(null);
                     uploadMessage = null;
@@ -133,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                     intent.setType("*/*");
                 }
 
-                if (fileChooserParams.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) {
+                if (fileChooserParams.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE) {
                     intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 }
 
@@ -152,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
     private void checkAndRequestPermissions() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{
+                ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                 }, 101);

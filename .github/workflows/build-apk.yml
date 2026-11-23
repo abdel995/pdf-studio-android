@@ -32,12 +32,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: 🚀 Compiler l'APK Android (Debug)
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info
 
       - name: 📦 Renommer l'APK pour le téléchargement
         run: |
           mkdir -p build-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/PDF-Studio-Pro.apk
+          find app/build/outputs/apk/debug/ -name "*.apk" -exec cp {} build-artifacts/PDF-Studio-Pro.apk \;
 
       - name: 📤 Uploader l'APK dans les Artifacts GitHub
         uses: actions/upload-artifact@v4
