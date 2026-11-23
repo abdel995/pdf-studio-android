@@ -32,7 +32,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: 🚀 Compiler l'APK Android (Debug)
-        run: ./gradlew assembleDebug --stacktrace --info
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: 📦 Renommer l'APK pour le téléchargement
         run: |

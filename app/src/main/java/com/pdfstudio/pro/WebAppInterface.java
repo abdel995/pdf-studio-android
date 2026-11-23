@@ -32,8 +32,8 @@ public class WebAppInterface {
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "Téléchargements PDF Studio";
-            String description = "Notifications des documents PDF générés";
+            CharSequence name = "PDF Studio Downloads";
+            String description = "Notifications des documents PDF";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
@@ -88,9 +88,8 @@ public class WebAppInterface {
                     fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", destFile);
                 }
 
-                Toast.makeText(activity, "✓ Fichier enregistré : " + fileName, Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "Fichier enregistr\u00e9 : " + fileName, Toast.LENGTH_LONG).show();
 
-                // Show notification and offer to open file
                 if (fileUri != null) {
                     showDownloadNotification(fileName, fileUri, mimeType);
                 }
@@ -108,16 +107,21 @@ public class WebAppInterface {
             viewIntent.setDataAndType(fileUri, mimeType);
             viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
 
+            int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     activity,
                     0,
                     viewIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+                    pendingFlags
             );
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(activity, CHANNEL_ID)
                     .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setContentTitle("Document prêt : " + fileName)
+                    .setContentTitle("Document pr\u00eat : " + fileName)
                     .setContentText("Appuyez pour ouvrir le fichier")
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setContentIntent(pendingIntent)

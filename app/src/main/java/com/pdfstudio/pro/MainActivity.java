@@ -2,6 +2,7 @@ package com.pdfstudio.pro;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -10,7 +11,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
-import android.webkit.WebChromeClient.FileChooserParams;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -18,6 +18,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -25,35 +26,43 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.pdfstudio.pro.R;
+
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private ProgressBar progressBar;
     private ValueCallback<Uri[]> uploadMessage;
-
-    private final ActivityResultLauncher<Intent> fileChooserLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (uploadMessage == null) return;
-                Uri[] results = null;
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    if (result.getData().getClipData() != null) {
-                        int count = result.getData().getClipData().getItemCount();
-                        results = new Uri[count];
-                        for (int i = 0; i < count; i++) {
-                            results[i] = result.getData().getClipData().getItemAt(i).getUri();
-                        }
-                    } else if (result.getData().getData() != null) {
-                        results = new Uri[]{result.getData().getData()};
-                    }
-                }
-                uploadMessage.onReceiveValue(results);
-                uploadMessage = null;
-            }
-    );
+    private ActivityResultLauncher<Intent> fileChooserLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        fileChooserLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (uploadMessage == null) return;
+                        Uri[] results = null;
+                        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                            Intent data = result.getData();
+                            if (data.getClipData() != null) {
+                                ClipData clipData = data.getClipData();
+                                int count = clipData.getItemCount();
+                                results = new Uri[count];
+                                for (int i = 0; i < count; i++) {
+                                    results[i] = clipData.getItemAt(i).getUri();
+                                }
+                            } else if (data.getData() != null) {
+                                results = new Uri[]{data.getData()};
+                            }
+                        }
+                        uploadMessage.onReceiveValue(results);
+                        uploadMessage = null;
+                    }
+                }
+        );
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -145,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
                     fileChooserLauncher.launch(Intent.createChooser(intent, "Choisir un document ou une image"));
                 } catch (Exception e) {
                     uploadMessage = null;
-                    Toast.makeText(MainActivity.this, "Impossible d'ouvrir le sélecteur de fichiers", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Impossible d'ouvrir le s\u00e9lecteur de fichiers", Toast.LENGTH_SHORT).show();
                     return false;
                 }
                 return true;
