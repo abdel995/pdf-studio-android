@@ -473,7 +473,7 @@ async function executeImagesToPdf() {
     const res = await MobileEngine.batchImagesToPdf(selectedImages, pageSize, orientation, margin, mergeSingle);
     const firstImg = selectedImages[0].name;
     const baseName = firstImg.substring(0, firstImg.lastIndexOf('.')) || 'Images_Converties';
-    const dlName = res.isZip ? `${baseName}_pdf_separes.zip` : `${baseName}.pdf`;
+    const dlName = res.isZip ? `${baseName}.zip` : `${baseName}.pdf`;
     const mime = res.isZip ? 'application/zip' : 'application/pdf';
 
     MobileEngine.saveFile(res.bytes, dlName, mime);
@@ -521,7 +521,7 @@ async function executePdfToImages() {
 
     // Save ZIP containing all images
     const baseName = batch[0].base_name || 'PDF_Images';
-    const zipName = `${baseName}_images.zip`;
+    const zipName = `${baseName}.zip`;
     MobileEngine.saveFile(res.zipBytes, zipName, 'application/zip');
 
     sec.style.display = 'block';
