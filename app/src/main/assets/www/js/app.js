@@ -43,6 +43,7 @@ function handleBatchPdfUpload(files, tool) {
   document.getElementById(`${tool}-panel`).style.display = 'block';
 
   renderBatchFileList(tool);
+  renderFilePreviewThumbnails(tool, batchFilesMap[tool]);
   showToast(`${files.length} document(s) ajouté(s)`);
 }
 
@@ -118,6 +119,9 @@ function toggleTheme() {
 }
 
 function switchView(viewId) {
+  if (viewId === 'dashboard') {
+    clearAllWorkspacesAndFiles(false);
+  }
   document.querySelectorAll('.workspace-view').forEach(v => v.classList.remove('active'));
   const target = document.getElementById(`view-${viewId}`);
   if (target) {
@@ -164,6 +168,7 @@ function resetCurrentWorkspace(toolId) {
 
 function openTool(toolId) {
   switchView(toolId);
+  closeNavDrawer();
 }
 
 function filterTools() {
@@ -210,7 +215,8 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
-function renderResultBanner(containerId, downloadName, customHtml = '') {
+function renderResultBanner(containerId, downloadName, customHtml = '', toolName = '') {
+  addProcessedFile(downloadName, toolName || 'PDF Studio');
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -250,6 +256,7 @@ function handleSinglePdfUpload(files, tool) {
   if (tool === 'metadata') {
     loadMetadataForFile(file);
   }
+  renderFilePreviewThumbnails(tool, [file]);
 }
 
 // 1. Watermark
@@ -557,12 +564,63 @@ async function executePdfToImages() {
   }
 }
 
-// 12. Word to PDF / PDF to Word placeholder mobile handlers
+// 12. Word to PDF / PDF to Word offline client-side handlers
 async function executeWordToPdf() {
+  const batch = batchFilesMap['word-to-pdf'] || [];
+  if (batch.length === 0) {
+    showToast('Veuillez sélectionner au moins un fichier Word (.docx)');
+    return;
+  }
+  const modeSingleEl = document.getElementById('w2p-mode-single');
+  const mergeSingle = modeSingleEl ? modeSingleEl.checked : true;
   showToast('Conversion Word vers PDF en cours...');
+  try {
+    const res = await MobileEngine.batchWordToPdf(batch, mergeSingle);
+    const baseName = batch[0].base_name || 'Document_Word';
+    let dlName = '';
+    let mime = 'application/pdf';
+    if (res.isZip) {
+      dlName = `${baseName}_PDFs.zip`;
+      mime = 'application/zip';
+    } else {
+      dlName = `${baseName}.pdf`;
+    }
+    const b64 = MobileEngine.saveFile(res.bytes, dlName, mime);
+    renderResultBanner('word-to-pdf-panel', dlName);
+    addProcessedFile(dlName, 'Word en PDF (DOCX)', null, `${(res.bytes.length / 1024).toFixed(0)} Ko`, b64, mime);
+    showToast('Conversion Word en PDF terminée avec succès !');
+  } catch (err) {
+    showToast('Erreur : ' + err.message);
+  }
 }
+
 async function executeToWord() {
-  showToast('Conversion PDF vers Word en cours...');
+  const batch = batchFilesMap['to-word'] || [];
+  if (batch.length === 0) {
+    showToast('Veuillez sélectionner au moins un fichier PDF');
+    return;
+  }
+  const modeSingleEl = document.getElementById('to-word-mode-single');
+  const mergeSingle = modeSingleEl ? modeSingleEl.checked : false;
+  showToast('Conversion PDF vers Word (.docx) en cours...');
+  try {
+    const res = await MobileEngine.batchPdfToWord(batch, mergeSingle);
+    const baseName = batch[0].base_name || 'Document';
+    let dlName = '';
+    let mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    if (res.isZip) {
+      dlName = `${baseName}_Word.zip`;
+      mime = 'application/zip';
+    } else {
+      dlName = `${baseName}.docx`;
+    }
+    const b64 = MobileEngine.saveFile(res.bytes, dlName, mime);
+    renderResultBanner('to-word-panel', dlName);
+    addProcessedFile(dlName, 'PDF en Word (DOCX)', null, `${(res.bytes.length / 1024).toFixed(0)} Ko`, b64, mime);
+    showToast('Conversion PDF en Word (.docx) terminée avec succès !');
+  } catch (err) {
+    showToast('Erreur : ' + err.message);
+  }
 }
 
 function downloadDataUrl(dataUrl, filename) {
@@ -594,3 +652,308 @@ async function executeCompressPdf() {
     showToast('Erreur : ' + err.message);
   }
 }
+
+/* ========================================================
+   FILE CLEARING, THUMBNAIL PREVIEWS & PROCESSED HISTORY
+   ======================================================== */
+
+function clearAllWorkspacesAndFiles(showNotification = false) {
+  activeFileMap = {};
+  for (const k in batchFilesMap) {
+    batchFilesMap[k] = [];
+  }
+  if (typeof selectedImages !== 'undefined') selectedImages = [];
+
+  document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.value = '';
+  });
+
+  document.querySelectorAll('.dropzone').forEach(dz => {
+    dz.style.display = 'block';
+  });
+  document.querySelectorAll('[id$="-panel"], #img-panel').forEach(p => {
+    p.style.display = 'none';
+  });
+
+  document.querySelectorAll('.batch-file-list').forEach(el => {
+    el.innerHTML = '';
+  });
+
+  document.querySelectorAll('.result-banner').forEach(el => {
+    if (el.parentElement) el.parentElement.style.display = 'none';
+  });
+
+  document.querySelectorAll('.preview-container').forEach(el => {
+    el.innerHTML = '';
+    el.style.display = 'none';
+  });
+
+  document.querySelectorAll('[id$="-filename"], [id$="-name"]').forEach(el => {
+    if (el.tagName === 'STRONG' || el.tagName === 'SPAN') {
+      el.textContent = '0 document(s) sélectionné(s)';
+    }
+  });
+
+  if (showNotification) {
+    showToast('Fichiers joints vidés.');
+  }
+}
+
+function goToHomeAndClear() {
+  clearAllWorkspacesAndFiles(true);
+  switchView('dashboard');
+  closeNavDrawer();
+}
+
+async function renderFilePreviewThumbnails(tool, files) {
+  const container = document.getElementById(`${tool}-preview-container`);
+  if (!container) return;
+
+  container.innerHTML = '';
+  const fileList = Array.isArray(files) ? files : [files];
+  if (!fileList || fileList.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  const label = document.createElement('div');
+  label.className = 'preview-header-label';
+  label.innerHTML = `<span>👁️ Aperçu des documents (${fileList.length})</span>`;
+  container.appendChild(label);
+
+  const grid = document.createElement('div');
+  grid.className = 'selected-preview-grid';
+
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
+    if (!file) continue;
+
+    const isImg = (file.type && file.type.startsWith('image/')) || /\.(png|jpg|jpeg|webp|bmp|gif)$/i.test(file.name);
+    const isPdf = (file.type && file.type.includes('pdf')) || /\.pdf$/i.test(file.name);
+    const isWord = /\.docx?$/i.test(file.name);
+
+    const card = document.createElement('div');
+    card.className = 'selected-preview-card';
+
+    if (isImg) {
+      const url = URL.createObjectURL(file);
+      card.innerHTML = `
+        <div class="thumb-img-wrapper">
+          <img src="${url}" alt="${escapeHtml(file.name)}">
+          <span class="thumb-badge">Image ${i + 1}</span>
+        </div>
+        <div class="thumb-meta" dir="auto" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
+      `;
+      grid.appendChild(card);
+    } else if (isPdf && typeof pdfjsLib !== 'undefined') {
+      const thumbWrapper = document.createElement('div');
+      thumbWrapper.className = 'thumb-img-wrapper';
+      thumbWrapper.innerHTML = `
+        <div class="thumb-loading-placeholder">📄 Chargement aperçu...</div>
+        <span class="thumb-badge">PDF ${i + 1}</span>
+      `;
+      const meta = document.createElement('div');
+      meta.className = 'thumb-meta';
+      meta.setAttribute('dir', 'auto');
+      meta.setAttribute('title', file.name);
+      meta.textContent = file.name;
+
+      card.appendChild(thumbWrapper);
+      card.appendChild(meta);
+      grid.appendChild(card);
+
+      (async () => {
+        try {
+          const buf = await file.slice(0, 1024 * 1024 * 6).arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+          const page = await pdf.getPage(1);
+          const viewport = page.getViewport({ scale: 0.25 });
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+          thumbWrapper.innerHTML = '';
+          thumbWrapper.appendChild(canvas);
+          const badge = document.createElement('span');
+          badge.className = 'thumb-badge';
+          badge.textContent = `${pdf.numPages} p.`;
+          thumbWrapper.appendChild(badge);
+        } catch (e) {
+          thumbWrapper.innerHTML = `<div class="thumb-icon-placeholder">📄</div><span class="thumb-badge">PDF</span>`;
+        }
+      })();
+    } else if (isWord) {
+      card.innerHTML = `
+        <div class="thumb-img-wrapper" style="background:#eff6ff;">
+          <div class="thumb-icon-placeholder" style="color:#2563eb;">📝</div>
+          <span class="thumb-badge">DOCX</span>
+        </div>
+        <div class="thumb-meta" dir="auto" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
+      `;
+      grid.appendChild(card);
+    }
+  }
+
+  container.appendChild(grid);
+}
+
+const HISTORY_KEY = 'pdf_studio_treated_history';
+
+function getProcessedFiles() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function addProcessedFile(name, toolName, downloadUrl = null, sizeStr = '', base64Data = null, mimeType = 'application/pdf') {
+  let history = getProcessedFiles();
+  const item = {
+    id: 'f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    name: name,
+    toolName: toolName || 'PDF Studio',
+    downloadUrl: downloadUrl,
+    sizeStr: sizeStr || '',
+    mimeType: mimeType || 'application/pdf',
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    dateStr: new Date().toLocaleDateString('fr-FR'),
+    base64Data: (base64Data && base64Data.length < 2500000) ? base64Data : null
+  };
+  history = [item, ...history.filter(h => h.name !== name)].slice(0, 30);
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch (e) {
+    history.forEach(h => delete h.base64Data);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+  updateHistoryUI();
+}
+
+function removeProcessedFile(id) {
+  let history = getProcessedFiles();
+  history = history.filter(h => h.id !== id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  updateHistoryUI();
+  showToast('Fichier retiré');
+}
+
+function clearProcessedHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  updateHistoryUI();
+  showToast('Historique vidé');
+}
+
+function openOrDownloadProcessedFile(id) {
+  const history = getProcessedFiles();
+  const item = history.find(h => h.id === id);
+  if (!item) return;
+
+  if (item.downloadUrl) {
+    window.open(item.downloadUrl, '_blank');
+  } else if (item.base64Data) {
+    if (window.AndroidBridge && window.AndroidBridge.saveBase64File) {
+      window.AndroidBridge.saveBase64File(item.base64Data, item.name, item.mimeType);
+      showToast('Document ouvert : ' + item.name);
+    } else {
+      downloadDataUrl('data:' + item.mimeType + ';base64,' + item.base64Data, item.name);
+    }
+  } else {
+    showToast('Fichier dans votre dossier Téléchargements : ' + item.name);
+  }
+}
+
+function updateHistoryUI() {
+  const history = getProcessedFiles();
+  const count = history.length;
+
+  const navBadge = document.getElementById('nav-history-badge');
+  if (navBadge) navBadge.textContent = count;
+  const modalBadge = document.getElementById('modal-history-badge');
+  if (modalBadge) modalBadge.textContent = count;
+
+  const drawerList = document.getElementById('drawer-recent-list');
+  if (drawerList) {
+    if (count === 0) {
+      drawerList.innerHTML = `<p style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:0.5rem;">Aucun document traité.</p>`;
+    } else {
+      drawerList.innerHTML = history.slice(0, 6).map(item => `
+        <div class="drawer-recent-item" onclick="openOrDownloadProcessedFile('${item.id}')">
+          <div class="drawer-recent-info">
+            <span class="drawer-recent-name" dir="auto">${escapeHtml(item.name)}</span>
+            <span class="drawer-recent-tool">${escapeHtml(item.toolName)} • ${item.timestamp}</span>
+          </div>
+          <span style="font-size:1rem;">📥</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  const modalList = document.getElementById('modal-history-list');
+  if (modalList) {
+    if (count === 0) {
+      modalList.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:2rem 0;">Aucun document traité pour l'instant.</p>`;
+    } else {
+      modalList.innerHTML = history.map(item => `
+        <div class="history-card-item">
+          <div style="display:flex; align-items:center; gap:0.75rem; overflow:hidden;">
+            <div style="font-size:1.5rem;">📄</div>
+            <div style="overflow:hidden;">
+              <strong dir="auto" class="filename-text" style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(item.name)}</strong>
+              <div style="font-size:0.75rem; color:var(--text-muted);">
+                <span class="tool-badge" style="background:var(--bg-subtle); padding:1px 6px;">${escapeHtml(item.toolName)}</span>
+                ${item.dateStr} à ${item.timestamp} ${item.sizeStr ? '• ' + item.sizeStr : ''}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <button class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.8rem;" onclick="openOrDownloadProcessedFile('${item.id}')">
+              Ouvrir
+            </button>
+            <button class="btn btn-secondary" style="padding:0.35rem 0.5rem; font-size:0.8rem;" onclick="removeProcessedFile('${item.id}')" title="Retirer">
+              ✕
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+function openProcessedFilesModal() {
+  updateHistoryUI();
+  const modal = document.getElementById('processed-files-modal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeProcessedFilesModal() {
+  const modal = document.getElementById('processed-files-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function toggleNavDrawer() {
+  const drawer = document.getElementById('nav-drawer');
+  const backdrop = document.getElementById('nav-drawer-backdrop');
+  if (!drawer || !backdrop) return;
+  const isOpen = drawer.classList.contains('active');
+  if (isOpen) {
+    closeNavDrawer();
+  } else {
+    drawer.classList.add('active');
+    backdrop.classList.add('active');
+    updateHistoryUI();
+  }
+}
+
+function closeNavDrawer() {
+  const drawer = document.getElementById('nav-drawer');
+  const backdrop = document.getElementById('nav-drawer-backdrop');
+  if (drawer) drawer.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  updateHistoryUI();
+});
