@@ -1,3 +1,65 @@
+/* Embedded Arabic & Standard Typography for Exact Docx/PDF Rendering */
+@font-face {
+  font-family: 'Sakkal Majalla';
+  src: url('../fonts/majalla.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Sakkal Majalla';
+  src: url('../fonts/majallab.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Andalus';
+  src: url('../fonts/andlso.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Arabic Typesetting';
+  src: url('../fonts/arabtype.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Traditional Arabic';
+  src: url('../fonts/trado.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Traditional Arabic';
+  src: url('../fonts/tradbdo.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Calibri';
+  src: url('../fonts/calibri.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Calibri';
+  src: url('../fonts/calibrib.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Times New Roman';
+  src: url('../fonts/times.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Times New Roman';
+  src: url('../fonts/timesbd.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;

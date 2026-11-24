@@ -474,7 +474,7 @@ const MobileEngine = {
       try {
         const renderContainer = document.createElement('div');
         renderContainer.id = 'docx-render-temp-' + Date.now();
-        renderContainer.style.cssText = 'position:fixed; left:-10000px; top:0; width:800px; background:#ffffff; opacity:0; pointer-events:none; z-index:-1000;';
+        renderContainer.style.cssText = 'position:fixed; left:0; top:0; width:800px; background:#ffffff; opacity:1; visibility:visible; pointer-events:none; z-index:-99999;';
         document.body.appendChild(renderContainer);
 
         await docx.renderAsync(buffer, renderContainer, null, {
@@ -488,6 +488,10 @@ const MobileEngine = {
           renderFootnotes: true,
           useBase64URL: true
         });
+
+        if (document.fonts && document.fonts.ready) {
+          try { await document.fonts.ready; } catch (_) {}
+        }
 
         // Query rendered pages
         let pageElements = renderContainer.querySelectorAll('.docx-wrapper > section, article.docx, section.docx');
@@ -582,10 +586,11 @@ const MobileEngine = {
       hasContentOnPage = false;
     };
 
-    const drawCanvasText = async (text, fontSize, isBold, isRtl, isHeading = false) => {
-      const fontName = isRtl
-        ? '"Noto Sans Arabic", "Cairo", "Segoe UI", Tahoma, Arial, sans-serif'
-        : 'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif';
+    const drawCanvasText = async (text, fontSize, isBold, isRtl, isHeading = false, customFont = '') => {
+      const fallbackFont = isRtl
+        ? '"Sakkal Majalla", "Traditional Arabic", "Andalus", "Arabic Typesetting", "Noto Sans Arabic", "Cairo", "Segoe UI", Tahoma, Arial, sans-serif'
+        : 'Calibri, "Times New Roman", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+      const fontName = customFont ? `"${customFont}", ${fallbackFont}` : fallbackFont;
 
       ctx.font = `${isBold ? 'bold ' : ''}${fontSize}px ${fontName}`;
       ctx.fillStyle = isHeading ? '#0f172a' : '#1e293b';
@@ -658,10 +663,26 @@ const MobileEngine = {
 
         let pText = "";
         let hasBold = false;
+        let detectedFont = "";
+        let detectedSz = 0;
         const runs = child.getElementsByTagName("w:r");
         for (let r = 0; r < runs.length; r++) {
           const run = runs[r];
           if (run.querySelector("w\\:b, b")) hasBold = true;
+          const rPr = run.querySelector("w\\:rPr, rPr");
+          if (rPr) {
+            const rFonts = rPr.querySelector("w\\:rFonts, rFonts");
+            if (rFonts && !detectedFont) {
+              detectedFont = rFonts.getAttribute("w:cs") || rFonts.getAttribute("cs") ||
+                             rFonts.getAttribute("w:ascii") || rFonts.getAttribute("ascii") ||
+                             rFonts.getAttribute("w:hAnsi") || rFonts.getAttribute("hAnsi") || "";
+            }
+            const szNode = rPr.querySelector("w\\:szCs, szCs, w\\:sz, sz");
+            if (szNode && !detectedSz) {
+              const val = parseInt(szNode.getAttribute("w:val") || szNode.getAttribute("val") || "0", 10);
+              if (val > 0) detectedSz = Math.round(val / 2 * 1.33);
+            }
+          }
           const textNodes = run.getElementsByTagName("w:t");
           for (let t = 0; t < textNodes.length; t++) {
             pText += textNodes[t].textContent;
@@ -678,20 +699,20 @@ const MobileEngine = {
 
         if (isHeading1) {
           curY += 14;
-          await drawCanvasText(pText, 34, true, isArabic, true);
+          await drawCanvasText(pText, detectedSz || 34, true, isArabic, true, detectedFont);
           curY += 12;
         } else if (isHeading2) {
           curY += 10;
-          await drawCanvasText(pText, 28, true, isArabic, true);
+          await drawCanvasText(pText, detectedSz || 28, true, isArabic, true, detectedFont);
           curY += 8;
         } else if (isHeading3) {
           curY += 8;
-          await drawCanvasText(pText, 24, true, isArabic, true);
+          await drawCanvasText(pText, detectedSz || 24, true, isArabic, true, detectedFont);
           curY += 6;
         } else {
           const isLikelyTitle = (pText.length < 60 && hasBold && !pText.endsWith('.'));
-          const fSize = isLikelyTitle ? 24 : 20;
-          await drawCanvasText(pText, fSize, hasBold || isLikelyTitle, isArabic, isLikelyTitle);
+          const fSize = detectedSz || (isLikelyTitle ? 24 : 20);
+          await drawCanvasText(pText, fSize, hasBold || isLikelyTitle, isArabic, isLikelyTitle, detectedFont);
           curY += 8;
         }
       } else if (nodeName.endsWith('tbl')) {
@@ -796,6 +817,29 @@ const MobileEngine = {
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
     };
 
+    const resolveFontName = (pdfFontName, pdfStyles, isArabic) => {
+      let rawName = "";
+      if (pdfStyles && pdfFontName && pdfStyles[pdfFontName] && pdfStyles[pdfFontName].fontFamily) {
+        rawName = pdfStyles[pdfFontName].fontFamily;
+      } else if (pdfFontName) {
+        rawName = pdfFontName;
+      }
+      rawName = rawName.replace(/^[A-Z]{6}\+/, '');
+      rawName = rawName.replace(/[-_,](Bold|Italic|Regular|BoldItalic|MT|PS|BoldMT)$/i, '');
+      if (/sakkalmajalla/i.test(rawName)) rawName = "Sakkal Majalla";
+      else if (/arabictypesetting/i.test(rawName)) rawName = "Arabic Typesetting";
+      else if (/traditionalarabic/i.test(rawName)) rawName = "Traditional Arabic";
+      else if (/andalus/i.test(rawName)) rawName = "Andalus";
+      else if (/timesnewroman/i.test(rawName)) rawName = "Times New Roman";
+      else if (/calibri/i.test(rawName)) rawName = "Calibri";
+      else if (/arial/i.test(rawName)) rawName = "Arial";
+
+      if (!rawName || rawName === 'sans-serif' || rawName === 'serif' || rawName === 'monospace') {
+        return isArabic ? "Sakkal Majalla" : "Calibri";
+      }
+      return rawName;
+    };
+
     for (let pNum = 1; pNum <= numPages; pNum++) {
       if (pNum > 1) {
         bodyXml += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
@@ -864,8 +908,9 @@ const MobileEngine = {
           jcVal = '<w:jc w:val="center"/>';
         }
 
+        const fontFam = resolveFontName(firstItem.fontName, textContent.styles, isArabic);
         const pPr = `<w:pPr>${isArabic ? '<w:bidi/>' : ''}${jcVal}</w:pPr>`;
-        const rPr = `${isArabic ? '<w:rtl/>' : ''}${isBold ? '<w:b/>' : ''}${isItalic ? '<w:i/>' : ''}<w:sz w:val="${Math.round(fontHeight * 2)}"/>`;
+        const rPr = `<w:rFonts w:ascii="${fontFam}" w:hAnsi="${fontFam}" w:cs="${fontFam}"/>${isArabic ? '<w:rtl/>' : ''}${isBold ? '<w:b/>' : ''}${isItalic ? '<w:i/>' : ''}<w:sz w:val="${Math.round(fontHeight * 2)}"/><w:szCs w:val="${Math.round(fontHeight * 2)}"/>`;
 
         bodyXml += `<w:p>${pPr}<w:r><w:rPr>${rPr}</w:rPr><w:t xml:space="preserve">${escapeXml(lineText)}</w:t></w:r></w:p>`;
       }
