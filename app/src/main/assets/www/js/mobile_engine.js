@@ -464,14 +464,74 @@ const MobileEngine = {
     };
   },
 
-  // 15. Word (.docx) to PDF (100% Offline Canvas-Powered Engine with Full Unicode & Arabic RTL Support)
+  // 15. Word (.docx) to PDF (High-Fidelity: docx-preview + html2canvas with Canvas A4 fallback)
   wordToPdf: async function(docxFile) {
     const buffer = await this.readFileAsArrayBuffer(docxFile);
+
+    // Method 1: Pixel-Perfect DOM Engine using docx-preview & html2canvas
+    // Preserves exact Word styles, CSS fonts, margins, tables, colors, headers & footers
+    if (typeof docx !== 'undefined' && typeof html2canvas !== 'undefined') {
+      try {
+        const renderContainer = document.createElement('div');
+        renderContainer.id = 'docx-render-temp-' + Date.now();
+        renderContainer.style.cssText = 'position:fixed; left:-10000px; top:0; width:800px; background:#ffffff; opacity:0; pointer-events:none; z-index:-1000;';
+        document.body.appendChild(renderContainer);
+
+        await docx.renderAsync(buffer, renderContainer, null, {
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          ignoreFonts: false,
+          breakPages: true,
+          renderHeaders: true,
+          renderFooters: true,
+          renderFootnotes: true,
+          useBase64URL: true
+        });
+
+        // Query rendered pages
+        let pageElements = renderContainer.querySelectorAll('.docx-wrapper > section, article.docx, section.docx');
+        if (!pageElements || pageElements.length === 0) {
+          pageElements = renderContainer.querySelectorAll('.docx');
+        }
+        if (!pageElements || pageElements.length === 0) {
+          pageElements = [renderContainer];
+        }
+
+        const pdfDoc = await PDFDocument.create();
+        const pdfWidth = 595.28;
+        const pdfHeight = 841.89;
+
+        for (let i = 0; i < pageElements.length; i++) {
+          const pageEl = pageElements[i];
+          const canvas = await html2canvas(pageEl, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          });
+          const imgData = canvas.toDataURL('image/jpeg', 0.94);
+          const img = await pdfDoc.embedJpg(imgData);
+          const p = pdfDoc.addPage([pdfWidth, pdfHeight]);
+          p.drawImage(img, { x: 0, y: 0, width: pdfWidth, height: pdfHeight });
+        }
+
+        document.body.removeChild(renderContainer);
+
+        if (pdfDoc.getPageCount() > 0) {
+          return await pdfDoc.save();
+        }
+      } catch (domErr) {
+        console.warn('High-fidelity DOM Word rendering failed, falling back to direct Canvas engine:', domErr);
+      }
+    }
+
+    // Method 2: Robust Canvas A4 Fallback with Full Unicode / Arabic RTL Support
     let zip;
     try {
       zip = await JSZip.loadAsync(buffer);
     } catch (e) {
-      throw new Error("Impossible d'ouvrir le fichier Word (.docx). Assurez-vous qu'il s'agit d'un document Word valide.");
+      throw new Error("Impossible d'ouvrir le fichier Word (.docx). Fichier endommagé ou non valide.");
     }
 
     const docXmlFile = zip.file("word/document.xml");
@@ -484,8 +544,6 @@ const MobileEngine = {
     const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
 
     const pdfDoc = await PDFDocument.create();
-
-    // Canvas-based A4 Page Renderer (150 DPI: 1240 x 1754 px)
     const a4Width = 1240;
     const a4Height = 1754;
     const pdfWidth = 595.28;
@@ -524,7 +582,6 @@ const MobileEngine = {
       hasContentOnPage = false;
     };
 
-    // Helper to wrap and draw text onto canvas with full RTL / Unicode support
     const drawCanvasText = async (text, fontSize, isBold, isRtl, isHeading = false) => {
       const fontName = isRtl
         ? '"Noto Sans Arabic", "Cairo", "Segoe UI", Tahoma, Arial, sans-serif'
@@ -579,7 +636,6 @@ const MobileEngine = {
       }
     };
 
-    // Parse XML body child elements in sequence
     const bodyNode = xmlDoc.querySelector("w\\:body, body");
     if (!bodyNode) {
       throw new Error("Structure du document Word invalide (<w:body> manquant).");
@@ -590,13 +646,9 @@ const MobileEngine = {
       const child = children[c];
       const nodeName = (child.nodeName || '').toLowerCase();
 
-      // PARAGRAPH
       if (nodeName.endsWith('p')) {
-        // Page break
         const pageBr = child.querySelector("w\\:br[w\\:type='page'], br[type='page']");
-        if (pageBr) {
-          if (hasContentOnPage) await commitPage();
-        }
+        if (pageBr && hasContentOnPage) await commitPage();
 
         const pStyle = child.querySelector("w\\:pStyle, pStyle");
         const styleVal = pStyle ? (pStyle.getAttribute("w:val") || pStyle.getAttribute("val") || "") : "";
@@ -642,10 +694,7 @@ const MobileEngine = {
           await drawCanvasText(pText, fSize, hasBold || isLikelyTitle, isArabic, isLikelyTitle);
           curY += 8;
         }
-      }
-
-      // TABLE
-      else if (nodeName.endsWith('tbl')) {
+      } else if (nodeName.endsWith('tbl')) {
         const rows = child.getElementsByTagName("w:tr");
         if (rows.length === 0) continue;
 
@@ -734,7 +783,7 @@ const MobileEngine = {
     }
   },
 
-  // 17. PDF to Word (.docx) (100% Offline Client-Side Engine)
+  // 17. High-Fidelity PDF to Word (.docx) Engine
   pdfToWord: async function(pdfFile) {
     const buffer = await this.readFileAsArrayBuffer(pdfFile);
     const pdfData = new Uint8Array(buffer);
@@ -753,21 +802,23 @@ const MobileEngine = {
       }
 
       const page = await pdf.getPage(pNum);
+      const viewport = page.getViewport({ scale: 1.0 });
+      const pageWidth = viewport.width;
       const textContent = await page.getTextContent();
       const items = textContent.items || [];
 
       if (items.length === 0) continue;
 
       // Group items into lines by y-coordinate
-      const lines = [];
-      let currentLine = [];
-      let lastY = null;
-
       items.sort((a, b) => {
         const yDiff = b.transform[5] - a.transform[5];
         if (Math.abs(yDiff) > 3) return yDiff;
         return a.transform[4] - b.transform[4];
       });
+
+      const lines = [];
+      let currentLine = [];
+      let lastY = null;
 
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
@@ -786,24 +837,40 @@ const MobileEngine = {
       }
       if (currentLine.length > 0) lines.push(currentLine);
 
-      // Build paragraphs from lines
+      // Build paragraphs from lines with font styles, sizing & alignment
       for (let lIdx = 0; lIdx < lines.length; lIdx++) {
         const lineItems = lines[lIdx];
         const lineText = lineItems.map(it => it.str).join(" ").trim();
         if (!lineText) continue;
 
-        const maxFontHeight = Math.max(...lineItems.map(it => Math.abs(it.height || it.transform[0] || 11)));
-        const isHeading = maxFontHeight >= 14 || (lineText.length < 60 && maxFontHeight >= 12 && !lineText.endsWith('.'));
+        // Detect font size and style from items
+        const firstItem = lineItems[0];
+        const fontHeight = Math.abs(firstItem.height || firstItem.transform[0] || 11);
+        const fontName = (firstItem.fontName || '').toLowerCase();
+        const isBold = fontName.includes('bold') || fontName.includes('black') || fontName.includes('heavy');
+        const isItalic = fontName.includes('italic') || fontName.includes('oblique');
         const isArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(lineText);
 
-        const pPr = isArabic ? '<w:pPr><w:bidi/></w:pPr>' : '';
-        const rPr = (isArabic ? '<w:rtl/>' : '') + (isHeading ? '<w:b/><w:sz w:val="28"/>' : '<w:sz w:val="22"/>');
+        // Alignment detection based on line center / right edge
+        const minX = Math.min(...lineItems.map(it => it.transform[4]));
+        const maxX = Math.max(...lineItems.map(it => it.transform[4] + (it.width || 0)));
+        const lineWidth = maxX - minX;
+        const isCentered = Math.abs((minX + maxX) / 2 - (pageWidth / 2)) < 35 && lineWidth < pageWidth * 0.7;
+
+        let jcVal = '';
+        if (isArabic) {
+          jcVal = '<w:jc w:val="right"/>';
+        } else if (isCentered) {
+          jcVal = '<w:jc w:val="center"/>';
+        }
+
+        const pPr = `<w:pPr>${isArabic ? '<w:bidi/>' : ''}${jcVal}</w:pPr>`;
+        const rPr = `${isArabic ? '<w:rtl/>' : ''}${isBold ? '<w:b/>' : ''}${isItalic ? '<w:i/>' : ''}<w:sz w:val="${Math.round(fontHeight * 2)}"/>`;
 
         bodyXml += `<w:p>${pPr}<w:r><w:rPr>${rPr}</w:rPr><w:t xml:space="preserve">${escapeXml(lineText)}</w:t></w:r></w:p>`;
       }
     }
 
-    // Wrap in full standard DOCX package
     const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
