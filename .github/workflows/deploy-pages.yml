@@ -15,10 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # 1. Empaqueter les fichiers statiques de l'application Web
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Cloner le Référentiel
@@ -32,6 +30,14 @@ jobs:
         with:
           path: 'app/src/main/assets/www'
 
+  # 2. Déployer l'artefact sur GitHub Pages
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: 🚀 Déployer sur GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
