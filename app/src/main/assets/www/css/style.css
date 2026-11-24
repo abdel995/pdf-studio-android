@@ -1635,3 +1635,38 @@ body {
   unicode-bidi: plaintext;
   text-align: start;
 }
+
+
+/* Document Action Buttons */
+.btn-icon-sm {
+  padding: 0.35rem 0.55rem !important;
+  font-size: 0.82rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.25rem !important;
+}
+
+.btn-icon-tiny {
+  padding: 0.25rem 0.45rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+  transition: all 0.2s;
+  font-size: 0.8rem;
+}
+
+.btn-icon-tiny:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.btn-icon-tiny svg {
+  display: block;
+}

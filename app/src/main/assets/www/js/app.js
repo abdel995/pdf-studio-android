@@ -215,20 +215,40 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
-function renderResultBanner(containerId, downloadName, customHtml = '', toolName = '') {
-  addProcessedFile(downloadName, toolName || 'PDF Studio');
+function formatBytes(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' o';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' Ko';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
+}
+
+function renderResultBanner(containerId, downloadName, customHtml = '', toolName = '', base64Data = null, mimeType = 'application/pdf', bytes = null) {
+  const item = addProcessedFile(downloadName, toolName || 'PDF Studio', null, bytes ? formatBytes(bytes.length) : '', base64Data, mimeType, bytes);
   const container = document.getElementById(containerId);
   if (!container) return;
 
   const safeName = escapeHtml(downloadName);
+  const itemId = item ? item.id : '';
+
   container.innerHTML = `
     <div class="result-banner">
-      <h2>🎉 Traitement Terminé avec Succès !</h2>
-      <p>Votre document <strong dir="auto" class="filename-text">${safeName}</strong> a été généré et enregistré dans votre dossier <strong>Téléchargements</strong>.</p>
+      <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.5rem;">
+        <span style="font-size:1.75rem;">🎉</span>
+        <h2 style="margin:0;">Traitement Terminé avec Succès !</h2>
+      </div>
+      <p style="margin-bottom:1rem;">Votre document <strong dir="auto" class="filename-text">${safeName}</strong> est prêt et enregistré dans vos <strong>Téléchargements</strong>.</p>
       ${customHtml}
-      <div class="result-actions" style="margin-top: 1rem;">
-        <button class="btn btn-white btn-lg" onclick="showToast('Fichier disponible dans Téléchargements : ' + encodeURIComponent('${encodeURIComponent(downloadName)}'))">
-          ✓ Fichier Enregistré
+      <div class="result-actions" style="margin-top:1.25rem; display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-white btn-lg" onclick="openProcessedFile('${itemId}')" title="Ouvrir dans l'application par défaut">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Ouvrir le fichier
+        </button>
+        <button class="btn btn-secondary btn-lg" onclick="previewProcessedFile('${itemId}')" title="Visualiser dans l'application">
+          👁️ Visualiser
+        </button>
+        <button class="btn btn-secondary btn-lg" onclick="shareProcessedFile('${itemId}')" title="Partager">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          Partager
         </button>
       </div>
     </div>
@@ -273,8 +293,8 @@ async function executeWatermarkPdf() {
   try {
     const bytes = await MobileEngine.watermarkPdf(file, text, fontSize, color, 0.25, rotation);
     const dlName = `${file.base_name}_filigrane.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('watermark-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('watermark-panel', dlName, '', 'Filigrane', b64, 'application/pdf', bytes);
     showToast('Filigrane appliqué avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -294,8 +314,8 @@ async function executePageNumbersPdf() {
   try {
     const bytes = await MobileEngine.pageNumbersPdf(file, fmt, pos, startAt);
     const dlName = `${file.base_name}_numerote.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('page-numbers-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('page-numbers-panel', dlName, '', 'Numérotation', b64, 'application/pdf', bytes);
     showToast('Numérotation appliquée !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -344,8 +364,8 @@ async function executeRemovePages() {
   try {
     const bytes = await MobileEngine.removePages(file, pagesStr);
     const dlName = `${file.base_name}_pages_supprimees.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('remove-pages-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('remove-pages-panel', dlName, '', 'Supprimer Pages', b64, 'application/pdf', bytes);
     showToast('Pages supprimées avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -361,8 +381,8 @@ async function executeFlattenPdf() {
   try {
     const bytes = await MobileEngine.flattenPdf(file);
     const dlName = `${file.base_name}_aplati.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('flatten-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('flatten-panel', dlName, '', 'Aplatir PDF', b64, 'application/pdf', bytes);
     showToast('PDF aplati avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -381,8 +401,8 @@ async function executeFastRotate() {
   try {
     const bytes = await MobileEngine.rotateFast(file, angle, pagesMode);
     const dlName = `${file.base_name}_pivote.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('rotate-fast-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('rotate-fast-panel', dlName, '', 'Pivoter Pages', b64, 'application/pdf', bytes);
     showToast('Pages pivotées avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -403,8 +423,8 @@ async function executeBatesStamping() {
   try {
     const bytes = await MobileEngine.batesStamping(file, prefix, digits, start, position);
     const dlName = `${file.base_name}_bates.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('bates-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('bates-panel', dlName, '', 'Numérotation Bates', b64, 'application/pdf', bytes);
     showToast('Numérotation Bates appliquée !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -442,8 +462,8 @@ async function executeMetadataUpdate(sanitize = false) {
     const bytes = await MobileEngine.updateMetadata(file, metadata, sanitize);
     const suffix = sanitize ? 'anonymise' : 'metadonnees';
     const dlName = `${file.base_name}_${suffix}.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('metadata-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('metadata-panel', dlName, '', 'Métadonnées', b64, 'application/pdf', bytes);
     showToast(sanitize ? 'Document anonymisé !' : 'Métadonnées enregistrées !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -508,8 +528,8 @@ async function executeImagesToPdf() {
     const dlName = res.isZip ? `${baseName}.zip` : `${baseName}.pdf`;
     const mime = res.isZip ? 'application/zip' : 'application/pdf';
 
-    MobileEngine.saveFile(res.bytes, dlName, mime);
-    renderResultBanner('img-result', dlName);
+    const b64 = MobileEngine.saveFile(res.bytes, dlName, mime);
+    renderResultBanner('img-result', dlName, '', 'Images en PDF', b64, mime, res.bytes);
     showToast('Conversion terminée avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -586,8 +606,7 @@ async function executeWordToPdf() {
       dlName = `${baseName}.pdf`;
     }
     const b64 = MobileEngine.saveFile(res.bytes, dlName, mime);
-    renderResultBanner('word-to-pdf-panel', dlName);
-    addProcessedFile(dlName, 'Word en PDF (DOCX)', null, `${(res.bytes.length / 1024).toFixed(0)} Ko`, b64, mime);
+    renderResultBanner('word-to-pdf-panel', dlName, '', 'Word en PDF (DOCX)', b64, mime, res.bytes);
     showToast('Conversion Word en PDF terminée avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -615,8 +634,7 @@ async function executeToWord() {
       dlName = `${baseName}.docx`;
     }
     const b64 = MobileEngine.saveFile(res.bytes, dlName, mime);
-    renderResultBanner('to-word-panel', dlName);
-    addProcessedFile(dlName, 'PDF en Word (DOCX)', null, `${(res.bytes.length / 1024).toFixed(0)} Ko`, b64, mime);
+    renderResultBanner('to-word-panel', dlName, '', 'PDF en Word (DOCX)', b64, mime, res.bytes);
     showToast('Conversion PDF en Word (.docx) terminée avec succès !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -645,8 +663,8 @@ async function executeCompressPdf() {
     // Re-pack streams and flatten AcroForms to reduce weight
     const bytes = await MobileEngine.flattenPdf(file);
     const dlName = `${file.base_name}_compresse.pdf`;
-    MobileEngine.saveFile(bytes, dlName);
-    renderResultBanner('compress-panel', dlName);
+    const b64 = MobileEngine.saveFile(bytes, dlName, 'application/pdf');
+    renderResultBanner('compress-panel', dlName, '', 'Compresser PDF', b64, 'application/pdf', bytes);
     showToast('Document compressé et enregistré !');
   } catch (err) {
     showToast('Erreur : ' + err.message);
@@ -798,6 +816,9 @@ async function renderFilePreviewThumbnails(tool, files) {
   container.appendChild(grid);
 }
 
+// In-memory active cache to prevent localStorage quota exhaustion for large documents
+window._processedBlobs = window._processedBlobs || {};
+
 const HISTORY_KEY = 'pdf_studio_treated_history';
 
 function getProcessedFiles() {
@@ -809,60 +830,291 @@ function getProcessedFiles() {
   }
 }
 
-function addProcessedFile(name, toolName, downloadUrl = null, sizeStr = '', base64Data = null, mimeType = 'application/pdf') {
+function addProcessedFile(name, toolName, downloadUrl = null, sizeStr = '', base64Data = null, mimeType = 'application/pdf', bytes = null) {
   let history = getProcessedFiles();
+  const id = 'f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+  // Keep complete data in session cache
+  window._processedBlobs[id] = {
+    id: id,
+    name: name,
+    toolName: toolName || 'PDF Studio',
+    mimeType: mimeType || 'application/pdf',
+    base64Data: base64Data,
+    bytes: bytes,
+    downloadUrl: downloadUrl
+  };
+
   const item = {
-    id: 'f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    id: id,
     name: name,
     toolName: toolName || 'PDF Studio',
     downloadUrl: downloadUrl,
-    sizeStr: sizeStr || '',
+    sizeStr: sizeStr || (bytes ? formatBytes(bytes.length) : ''),
     mimeType: mimeType || 'application/pdf',
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     dateStr: new Date().toLocaleDateString('fr-FR'),
-    base64Data: (base64Data && base64Data.length < 2500000) ? base64Data : null
+    // Store in localStorage if small, else retain in session cache
+    base64Data: (base64Data && base64Data.length < 1500000) ? base64Data : null
   };
+
   history = [item, ...history.filter(h => h.name !== name)].slice(0, 30);
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
   } catch (e) {
     history.forEach(h => delete h.base64Data);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch (ignore) {}
   }
   updateHistoryUI();
+  return item;
 }
 
 function removeProcessedFile(id) {
   let history = getProcessedFiles();
   history = history.filter(h => h.id !== id);
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  if (window._processedBlobs && window._processedBlobs[id]) {
+    delete window._processedBlobs[id];
+  }
   updateHistoryUI();
   showToast('Fichier retiré');
 }
 
 function clearProcessedHistory() {
   localStorage.removeItem(HISTORY_KEY);
+  window._processedBlobs = {};
   updateHistoryUI();
   showToast('Historique vidé');
 }
 
-function openOrDownloadProcessedFile(id) {
+function getFileItem(id) {
+  if (window._processedBlobs && window._processedBlobs[id]) {
+    return window._processedBlobs[id];
+  }
   const history = getProcessedFiles();
-  const item = history.find(h => h.id === id);
+  return history.find(h => h.id === id);
+}
+
+function openProcessedFile(id) {
+  const item = getFileItem(id);
   if (!item) return;
 
-  if (item.downloadUrl) {
+  const base64Data = item.base64Data;
+  const mimeType = item.mimeType || 'application/pdf';
+
+  if (window.AndroidBridge && window.AndroidBridge.openBase64File && base64Data) {
+    window.AndroidBridge.openBase64File(base64Data, item.name, mimeType);
+    showToast('Ouverture de ' + item.name);
+  } else if (base64Data) {
+    try {
+      const cleanData = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+      const byteCharacters = atob(cleanData);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+      if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
+        window.open(blobUrl, '_blank');
+      } else {
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = item.name;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        }, 500);
+      }
+    } catch (e) {
+      showToast('Erreur : ' + e.message);
+    }
+  } else if (item.downloadUrl) {
     window.open(item.downloadUrl, '_blank');
-  } else if (item.base64Data) {
-    if (window.AndroidBridge && window.AndroidBridge.saveBase64File) {
-      window.AndroidBridge.saveBase64File(item.base64Data, item.name, item.mimeType);
-      showToast('Document ouvert : ' + item.name);
-    } else {
-      downloadDataUrl('data:' + item.mimeType + ';base64,' + item.base64Data, item.name);
+  } else {
+    showToast('Fichier disponible dans vos Téléchargements : ' + item.name);
+  }
+}
+
+function shareProcessedFile(id) {
+  const item = getFileItem(id);
+  if (!item) return;
+
+  const base64Data = item.base64Data;
+  const mimeType = item.mimeType || 'application/pdf';
+
+  if (window.AndroidBridge && window.AndroidBridge.shareBase64File && base64Data) {
+    window.AndroidBridge.shareBase64File(base64Data, item.name, mimeType);
+  } else if (base64Data) {
+    try {
+      const cleanData = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+      const byteCharacters = atob(cleanData);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      const file = new File([blob], item.name, { type: mimeType });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+          files: [file],
+          title: item.name,
+          text: `Document traité avec PDF Studio Pro : ${item.name}`
+        }).catch(err => {
+          if (err.name !== 'AbortError') console.error(err);
+        });
+      } else {
+        openProcessedFile(id);
+      }
+    } catch (e) {
+      showToast('Partage indisponible : ' + e.message);
     }
   } else {
-    showToast('Fichier dans votre dossier Téléchargements : ' + item.name);
+    showToast('Document disponible dans vos Téléchargements');
   }
+}
+
+async function previewProcessedFile(id) {
+  const item = getFileItem(id);
+  if (!item) return;
+
+  const modal = document.getElementById('document-preview-modal');
+  const titleEl = document.getElementById('doc-preview-title');
+  const bodyEl = document.getElementById('doc-preview-body');
+  const shareBtn = document.getElementById('doc-preview-share-btn');
+  const openBtn = document.getElementById('doc-preview-open-btn');
+
+  if (!modal || !bodyEl) return;
+
+  if (titleEl) titleEl.textContent = `👁️ ${item.name}`;
+  if (shareBtn) shareBtn.onclick = () => shareProcessedFile(item.id);
+  if (openBtn) openBtn.onclick = () => openProcessedFile(item.id);
+
+  bodyEl.innerHTML = `<div style="padding:2.5rem; color:#fff;"><p>Chargement de l'aperçu du document...</p></div>`;
+  modal.classList.add('active');
+
+  try {
+    const base64Data = item.base64Data;
+    const mimeType = item.mimeType || 'application/pdf';
+
+    if (!base64Data && !item.bytes) {
+      bodyEl.innerHTML = `
+        <div style="background:#1e293b; border-radius:8px; padding:2rem; max-width:500px; margin:2rem auto; color:#fff;">
+          <p style="font-size:1.1rem; margin-bottom:1rem;">Document volumineux déjà enregistré sur votre appareil.</p>
+          <button class="btn btn-primary" onclick="openProcessedFile('${item.id}')">Ouvrir dans une application</button>
+        </div>
+      `;
+      return;
+    }
+
+    let byteArray;
+    if (item.bytes) {
+      byteArray = item.bytes;
+    } else {
+      const cleanData = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+      const byteCharacters = atob(cleanData);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      byteArray = new Uint8Array(byteNumbers);
+    }
+
+    if (mimeType === 'application/pdf' || item.name.toLowerCase().endsWith('.pdf')) {
+      const pdf = await pdfjsLib.getDocument({ data: byteArray }).promise;
+      const numPages = pdf.numPages;
+
+      bodyEl.innerHTML = `
+        <div style="color:#e2e8f0; font-size:0.85rem; margin-bottom:1rem; text-align:center;">
+          Document PDF — ${numPages} page(s)
+        </div>
+        <div id="pdf-preview-pages-container" style="display:flex; flex-direction:column; gap:1.25rem; align-items:center;"></div>
+      `;
+      const pagesContainer = document.getElementById('pdf-preview-pages-container');
+
+      const renderCount = Math.min(numPages, 12);
+      for (let pNum = 1; pNum <= renderCount; pNum++) {
+        const page = await pdf.getPage(pNum);
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const scale = Math.min(750 / unscaledViewport.width, 1.6);
+        const viewport = page.getViewport({ scale: scale });
+
+        const pageCard = document.createElement('div');
+        pageCard.style.cssText = 'background:#fff; border-radius:4px; box-shadow:0 4px 12px rgba(0,0,0,0.3); overflow:hidden; display:inline-block; max-width:100%;';
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.cssText = 'display:block; max-width:100%; height:auto;';
+
+        const pageLabel = document.createElement('div');
+        pageLabel.style.cssText = 'padding:4px 8px; font-size:0.75rem; background:#f1f5f9; color:#475569; text-align:right; border-top:1px solid #e2e8f0;';
+        pageLabel.textContent = `Page ${pNum} sur ${numPages}`;
+
+        pageCard.appendChild(canvas);
+        pageCard.appendChild(pageLabel);
+        pagesContainer.appendChild(pageCard);
+
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      }
+
+      if (numPages > renderCount) {
+        const moreNote = document.createElement('p');
+        moreNote.style.cssText = 'color:#e2e8f0; font-size:0.85rem; margin-top:1rem;';
+        moreNote.textContent = `+ ${numPages - renderCount} autres pages (utilisez "Ouvrir" pour visualiser le document complet).`;
+        pagesContainer.appendChild(moreNote);
+      }
+    } else if (mimeType.startsWith('image/')) {
+      const blob = new Blob([byteArray], { type: mimeType });
+      const imgUrl = URL.createObjectURL(blob);
+      bodyEl.innerHTML = `
+        <img src="${imgUrl}" style="max-width:100%; max-height:75vh; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.3);" alt="${escapeHtml(item.name)}">
+      `;
+    } else {
+      bodyEl.innerHTML = `
+        <div style="background:#fff; border-radius:8px; padding:2rem; max-width:500px; margin:2rem auto; text-align:center; color:#1e293b;">
+          <div style="font-size:3rem; margin-bottom:1rem;">📄</div>
+          <h4 style="margin:0 0 0.5rem 0; font-size:1.15rem;">${escapeHtml(item.name)}</h4>
+          <p style="color:#64748b; font-size:0.9rem; margin-bottom:1.5rem;">Document Word / Archive prêt à être visualisé dans votre application bureautique.</p>
+          <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="openProcessedFile('${item.id}')">Ouvrir dans Word / Office</button>
+            <button class="btn btn-secondary" onclick="shareProcessedFile('${item.id}')">Partager</button>
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    console.error('Preview error:', err);
+    bodyEl.innerHTML = `
+      <div style="color:#f87171; padding:2rem; text-align:center;">
+        <p>Aperçu direct indisponible pour ce format (${err.message}).</p>
+        <button class="btn btn-secondary" style="margin-top:1rem;" onclick="openProcessedFile('${item.id}')">
+          Ouvrir avec une application externe
+        </button>
+      </div>
+    `;
+  }
+}
+
+function closeDocumentPreviewModal() {
+  const modal = document.getElementById('document-preview-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function getFileIconEmoji(mimeType, filename) {
+  if (mimeType === 'application/pdf' || filename.endsWith('.pdf')) return '📕';
+  if (mimeType.includes('word') || filename.endsWith('.docx') || filename.endsWith('.doc')) return '📝';
+  if (mimeType.includes('zip') || filename.endsWith('.zip')) return '📦';
+  if (mimeType.startsWith('image/')) return '🖼️';
+  return '📄';
 }
 
 function updateHistoryUI() {
@@ -880,12 +1132,18 @@ function updateHistoryUI() {
       drawerList.innerHTML = `<p style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:0.5rem;">Aucun document traité.</p>`;
     } else {
       drawerList.innerHTML = history.slice(0, 6).map(item => `
-        <div class="drawer-recent-item" onclick="openOrDownloadProcessedFile('${item.id}')">
-          <div class="drawer-recent-info">
+        <div class="drawer-recent-item">
+          <div class="drawer-recent-info" onclick="openProcessedFile('${item.id}')" title="Cliquer pour ouvrir" style="flex:1; overflow:hidden; cursor:pointer;">
             <span class="drawer-recent-name" dir="auto">${escapeHtml(item.name)}</span>
             <span class="drawer-recent-tool">${escapeHtml(item.toolName)} • ${item.timestamp}</span>
           </div>
-          <span style="font-size:1rem;">📥</span>
+          <div style="display:flex; gap:0.25rem; align-items:center; flex-shrink:0;">
+            <button class="btn-icon-tiny" onclick="previewProcessedFile('${item.id}')" title="Visualiser">👁️</button>
+            <button class="btn-icon-tiny" onclick="shareProcessedFile('${item.id}')" title="Partager">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+            <button class="btn-icon-tiny" onclick="openProcessedFile('${item.id}')" title="Ouvrir">↗️</button>
+          </div>
         </div>
       `).join('');
     }
@@ -898,21 +1156,27 @@ function updateHistoryUI() {
     } else {
       modalList.innerHTML = history.map(item => `
         <div class="history-card-item">
-          <div style="display:flex; align-items:center; gap:0.75rem; overflow:hidden;">
-            <div style="font-size:1.5rem;">📄</div>
+          <div style="display:flex; align-items:center; gap:0.75rem; overflow:hidden; flex:1; cursor:pointer;" onclick="openProcessedFile('${item.id}')" title="Cliquer pour ouvrir directement">
+            <div style="font-size:1.5rem; flex-shrink:0;">${getFileIconEmoji(item.mimeType, item.name)}</div>
             <div style="overflow:hidden;">
-              <strong dir="auto" class="filename-text" style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(item.name)}</strong>
+              <strong dir="auto" class="filename-text" style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--primary);">${escapeHtml(item.name)}</strong>
               <div style="font-size:0.75rem; color:var(--text-muted);">
                 <span class="tool-badge" style="background:var(--bg-subtle); padding:1px 6px;">${escapeHtml(item.toolName)}</span>
                 ${item.dateStr} à ${item.timestamp} ${item.sizeStr ? '• ' + item.sizeStr : ''}
               </div>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:0.5rem;">
-            <button class="btn btn-primary" style="padding:0.35rem 0.75rem; font-size:0.8rem;" onclick="openOrDownloadProcessedFile('${item.id}')">
+          <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
+            <button class="btn btn-secondary btn-icon-sm" onclick="previewProcessedFile('${item.id}')" title="Visualiser / Aperçu">
+              👁️
+            </button>
+            <button class="btn btn-secondary btn-icon-sm" onclick="shareProcessedFile('${item.id}')" title="Partager (WhatsApp, Mail...)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="openProcessedFile('${item.id}')" title="Ouvrir dans une application">
               Ouvrir
             </button>
-            <button class="btn btn-secondary" style="padding:0.35rem 0.5rem; font-size:0.8rem;" onclick="removeProcessedFile('${item.id}')" title="Retirer">
+            <button class="btn btn-secondary btn-icon-sm" onclick="removeProcessedFile('${item.id}')" title="Retirer de l'historique">
               ✕
             </button>
           </div>

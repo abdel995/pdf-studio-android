@@ -3,6 +3,7 @@ package com.pdfstudio.pro;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -49,23 +50,37 @@ public class WebAppInterface {
         activity.runOnUiThread(() -> Toast.makeText(activity, message, Toast.LENGTH_SHORT).show());
     }
 
+    private String sanitizeFileName(String fileName) {
+        String safe = (fileName != null ? fileName.trim() : "");
+        safe = safe.replaceAll("[\\\\/*?:\"<>|]", "").trim();
+        return safe.isEmpty() ? "document.pdf" : safe;
+    }
+
+    private byte[] decodeBase64(String base64Data) {
+        String clean = base64Data;
+        if (clean.contains(",")) {
+            clean = clean.split(",")[1];
+        }
+        return Base64.decode(clean, Base64.DEFAULT);
+    }
+
+    private File writeToCacheFile(String base64Data, String safeFileName) throws Exception {
+        byte[] bytes = decodeBase64(base64Data);
+        File cacheDir = activity.getCacheDir();
+        if (!cacheDir.exists()) cacheDir.mkdirs();
+        File destFile = new File(cacheDir, safeFileName);
+        try (FileOutputStream fos = new FileOutputStream(destFile)) {
+            fos.write(bytes);
+            fos.flush();
+        }
+        return destFile;
+    }
+
     @JavascriptInterface
     public void saveBase64File(String base64Data, String fileName, String mimeType) {
         try {
-            String safeFileName = (fileName != null ? fileName.trim() : "");
-            // Remove illegal filesystem characters but preserve all Unicode and Arabic characters
-            safeFileName = safeFileName.replaceAll("[\\\\/*?:\"<>|]", "").trim();
-            if (safeFileName.isEmpty()) {
-                safeFileName = "document.pdf";
-            }
-            final String finalFileName = safeFileName;
-
-            String cleanData = base64Data;
-            if (cleanData.contains(",")) {
-                cleanData = cleanData.split(",")[1];
-            }
-            byte[] fileBytes = Base64.decode(cleanData, Base64.DEFAULT);
-
+            final String finalFileName = sanitizeFileName(fileName);
+            byte[] fileBytes = decodeBase64(base64Data);
             Uri fileUri = null;
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -98,7 +113,7 @@ public class WebAppInterface {
 
             final Uri finalUri = fileUri;
             activity.runOnUiThread(() -> {
-                Toast.makeText(activity, "Fichier enregistr\u00e9 : " + finalFileName, Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "Fichier enregistré : " + finalFileName, Toast.LENGTH_LONG).show();
                 if (finalUri != null) {
                     showDownloadNotification(finalFileName, finalUri, mimeType);
                 }
@@ -110,6 +125,52 @@ public class WebAppInterface {
                 Toast.makeText(activity, "Erreur enregistrement : " + e.getMessage(), Toast.LENGTH_LONG).show();
             });
         }
+    }
+
+    @JavascriptInterface
+    public void openBase64File(String base64Data, String fileName, String mimeType) {
+        activity.runOnUiThread(() -> {
+            try {
+                final String safeFileName = sanitizeFileName(fileName);
+                File file = writeToCacheFile(base64Data, safeFileName);
+                Uri fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", file);
+
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(fileUri, mimeType);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                try {
+                    activity.startActivity(Intent.createChooser(intent, "Ouvrir avec..."));
+                } catch (ActivityNotFoundException anf) {
+                    Toast.makeText(activity, "Aucune application disponible pour ouvrir ce format. Fichier disponible dans vos Téléchargements.", Toast.LENGTH_LONG).show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(activity, "Impossible d'ouvrir le fichier : " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void shareBase64File(String base64Data, String fileName, String mimeType) {
+        activity.runOnUiThread(() -> {
+            try {
+                final String safeFileName = sanitizeFileName(fileName);
+                File file = writeToCacheFile(base64Data, safeFileName);
+                Uri fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", file);
+
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType(mimeType);
+                shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, safeFileName);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                activity.startActivity(Intent.createChooser(shareIntent, "Partager " + safeFileName));
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(activity, "Erreur lors du partage : " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void showDownloadNotification(String fileName, Uri fileUri, String mimeType) {
@@ -132,7 +193,7 @@ public class WebAppInterface {
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(activity, CHANNEL_ID)
                     .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setContentTitle("Document pr\u00eat : " + fileName)
+                    .setContentTitle("Document prêt : " + fileName)
                     .setContentText("Appuyez pour ouvrir le fichier")
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setContentIntent(pendingIntent)

@@ -464,14 +464,14 @@ const MobileEngine = {
     };
   },
 
-  // 15. Word (.docx) to PDF (100% Offline Client-Side Engine)
+  // 15. Word (.docx) to PDF (100% Offline Canvas-Powered Engine with Full Unicode & Arabic RTL Support)
   wordToPdf: async function(docxFile) {
     const buffer = await this.readFileAsArrayBuffer(docxFile);
     let zip;
     try {
       zip = await JSZip.loadAsync(buffer);
     } catch (e) {
-      throw new Error("Impossible d'ouvrir le fichier Word. Assurez-vous qu'il s'agit d'un document .docx valide.");
+      throw new Error("Impossible d'ouvrir le fichier Word (.docx). Assurez-vous qu'il s'agit d'un document Word valide.");
     }
 
     const docXmlFile = zip.file("word/document.xml");
@@ -483,126 +483,222 @@ const MobileEngine = {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
 
-    // Create PDF
     const pdfDoc = await PDFDocument.create();
-    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    const pageWidth = 595.28;  // A4
-    const pageHeight = 841.89;
-    const margin = 50;
-    const contentWidth = pageWidth - (margin * 2);
-    const bottomLimit = 55;
+    // Canvas-based A4 Page Renderer (150 DPI: 1240 x 1754 px)
+    const a4Width = 1240;
+    const a4Height = 1754;
+    const pdfWidth = 595.28;
+    const pdfHeight = 841.89;
+    const marginX = 85;
+    const marginTop = 95;
+    const marginBottom = 95;
+    const contentWidth = a4Width - (marginX * 2);
 
-    let page = pdfDoc.addPage([pageWidth, pageHeight]);
-    let y = pageHeight - margin;
+    let canvas = document.createElement('canvas');
+    canvas.width = a4Width;
+    canvas.height = a4Height;
+    let ctx = canvas.getContext('2d');
+    let hasContentOnPage = false;
 
-    const addNewPage = () => {
-      page = pdfDoc.addPage([pageWidth, pageHeight]);
-      y = pageHeight - margin;
+    const resetCanvas = () => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, a4Width, a4Height);
+    };
+    resetCanvas();
+
+    let curY = marginTop;
+
+    const commitPage = async () => {
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
+      const img = await pdfDoc.embedJpg(dataUrl);
+      const page = pdfDoc.addPage([pdfWidth, pdfHeight]);
+      page.drawImage(img, { x: 0, y: 0, width: pdfWidth, height: pdfHeight });
+
+      canvas = document.createElement('canvas');
+      canvas.width = a4Width;
+      canvas.height = a4Height;
+      ctx = canvas.getContext('2d');
+      resetCanvas();
+      curY = marginTop;
+      hasContentOnPage = false;
     };
 
-    // Helper to wrap and draw text
-    const drawWrappedText = (text, fontSize, isBold, isRtl) => {
-      const font = isBold ? fontBold : fontRegular;
-      const lineHeight = fontSize * 1.35;
+    // Helper to wrap and draw text onto canvas with full RTL / Unicode support
+    const drawCanvasText = async (text, fontSize, isBold, isRtl, isHeading = false) => {
+      const fontName = isRtl
+        ? '"Noto Sans Arabic", "Cairo", "Segoe UI", Tahoma, Arial, sans-serif'
+        : 'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif';
+
+      ctx.font = `${isBold ? 'bold ' : ''}${fontSize}px ${fontName}`;
+      ctx.fillStyle = isHeading ? '#0f172a' : '#1e293b';
+
+      const lineHeight = Math.round(fontSize * 1.45);
       const words = text.split(/\s+/);
-      let currentLine = '';
+      let line = '';
 
-      for (let w = 0; w < words.length; w++) {
-        const testLine = currentLine ? `${currentLine} ${words[w]}` : words[w];
-        let testWidth = 0;
-        try {
-          testWidth = font.widthOfTextAtSize(testLine, fontSize);
-        } catch (e) {
-          testWidth = testLine.length * (fontSize * 0.55);
-        }
-
-        if (testWidth > contentWidth && currentLine) {
-          if (y - lineHeight < bottomLimit) addNewPage();
-          let xPos = margin;
-          if (isRtl) {
-            try {
-              const lw = font.widthOfTextAtSize(currentLine, fontSize);
-              xPos = pageWidth - margin - lw;
-            } catch (e) {}
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line ? `${line} ${words[n]}` : words[n];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > contentWidth && line) {
+          if (curY + lineHeight > a4Height - marginBottom) {
+            await commitPage();
+            ctx.font = `${isBold ? 'bold ' : ''}${fontSize}px ${fontName}`;
+            ctx.fillStyle = isHeading ? '#0f172a' : '#1e293b';
           }
-          page.drawText(currentLine, { x: xPos, y: y, size: fontSize, font: font, color: rgb(0.1, 0.1, 0.1) });
-          y -= lineHeight;
-          currentLine = words[w];
+          if (isRtl) {
+            ctx.textAlign = 'right';
+            ctx.fillText(line, a4Width - marginX, curY);
+          } else {
+            ctx.textAlign = 'left';
+            ctx.fillText(line, marginX, curY);
+          }
+          hasContentOnPage = true;
+          curY += lineHeight;
+          line = words[n];
         } else {
-          currentLine = testLine;
+          line = testLine;
         }
       }
 
-      if (currentLine) {
-        if (y - lineHeight < bottomLimit) addNewPage();
-        let xPos = margin;
-        if (isRtl) {
-          try {
-            const lw = font.widthOfTextAtSize(currentLine, fontSize);
-            xPos = pageWidth - margin - lw;
-          } catch (e) {}
+      if (line) {
+        if (curY + lineHeight > a4Height - marginBottom) {
+          await commitPage();
+          ctx.font = `${isBold ? 'bold ' : ''}${fontSize}px ${fontName}`;
+          ctx.fillStyle = isHeading ? '#0f172a' : '#1e293b';
         }
-        page.drawText(currentLine, { x: xPos, y: y, size: fontSize, font: font, color: rgb(0.1, 0.1, 0.1) });
-        y -= lineHeight;
+        if (isRtl) {
+          ctx.textAlign = 'right';
+          ctx.fillText(line, a4Width - marginX, curY);
+        } else {
+          ctx.textAlign = 'left';
+          ctx.fillText(line, marginX, curY);
+        }
+        hasContentOnPage = true;
+        curY += lineHeight;
       }
     };
 
-    // Process all paragraphs (<w:p>)
-    const paragraphs = xmlDoc.getElementsByTagName("w:p");
-    for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
-      const pNode = paragraphs[pIdx];
+    // Parse XML body child elements in sequence
+    const bodyNode = xmlDoc.querySelector("w\\:body, body");
+    if (!bodyNode) {
+      throw new Error("Structure du document Word invalide (<w:body> manquant).");
+    }
 
-      // Check if page break
-      const pageBr = pNode.querySelector("br[type='page'], w\\:br[w\\:type='page']");
-      if (pageBr) {
-        addNewPage();
-      }
+    const children = bodyNode.childNodes;
+    for (let c = 0; c < children.length; c++) {
+      const child = children[c];
+      const nodeName = (child.nodeName || '').toLowerCase();
 
-      // Check style
-      const pStyle = pNode.querySelector("pStyle, w\\:pStyle");
-      const styleVal = pStyle ? (pStyle.getAttribute("w:val") || pStyle.getAttribute("val") || "") : "";
-      const isHeading1 = /heading\s*1|titre\s*1/i.test(styleVal);
-      const isHeading2 = /heading\s*2|titre\s*2/i.test(styleVal);
+      // PARAGRAPH
+      if (nodeName.endsWith('p')) {
+        // Page break
+        const pageBr = child.querySelector("w\\:br[w\\:type='page'], br[type='page']");
+        if (pageBr) {
+          if (hasContentOnPage) await commitPage();
+        }
 
-      // Extract all text runs
-      let pText = "";
-      let hasBold = false;
-      const runs = pNode.getElementsByTagName("w:r");
-      for (let rIdx = 0; rIdx < runs.length; rIdx++) {
-        const rNode = runs[rIdx];
-        if (rNode.querySelector("b, w\\:b")) hasBold = true;
-        const textNodes = rNode.getElementsByTagName("w:t");
-        for (let tIdx = 0; tIdx < textNodes.length; tIdx++) {
-          pText += textNodes[tIdx].textContent;
+        const pStyle = child.querySelector("w\\:pStyle, pStyle");
+        const styleVal = pStyle ? (pStyle.getAttribute("w:val") || pStyle.getAttribute("val") || "") : "";
+        const isHeading1 = /heading\s*1|titre\s*1/i.test(styleVal);
+        const isHeading2 = /heading\s*2|titre\s*2/i.test(styleVal);
+        const isHeading3 = /heading\s*3|titre\s*3/i.test(styleVal);
+
+        let pText = "";
+        let hasBold = false;
+        const runs = child.getElementsByTagName("w:r");
+        for (let r = 0; r < runs.length; r++) {
+          const run = runs[r];
+          if (run.querySelector("w\\:b, b")) hasBold = true;
+          const textNodes = run.getElementsByTagName("w:t");
+          for (let t = 0; t < textNodes.length; t++) {
+            pText += textNodes[t].textContent;
+          }
+        }
+        pText = pText.trim();
+        if (!pText) {
+          curY += 14;
+          if (curY > a4Height - marginBottom && hasContentOnPage) await commitPage();
+          continue;
+        }
+
+        const isArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(pText);
+
+        if (isHeading1) {
+          curY += 14;
+          await drawCanvasText(pText, 34, true, isArabic, true);
+          curY += 12;
+        } else if (isHeading2) {
+          curY += 10;
+          await drawCanvasText(pText, 28, true, isArabic, true);
+          curY += 8;
+        } else if (isHeading3) {
+          curY += 8;
+          await drawCanvasText(pText, 24, true, isArabic, true);
+          curY += 6;
+        } else {
+          const isLikelyTitle = (pText.length < 60 && hasBold && !pText.endsWith('.'));
+          const fSize = isLikelyTitle ? 24 : 20;
+          await drawCanvasText(pText, fSize, hasBold || isLikelyTitle, isArabic, isLikelyTitle);
+          curY += 8;
         }
       }
 
-      pText = pText.trim();
-      if (!pText) {
-        y -= 10;
-        if (y < bottomLimit) addNewPage();
-        continue;
-      }
+      // TABLE
+      else if (nodeName.endsWith('tbl')) {
+        const rows = child.getElementsByTagName("w:tr");
+        if (rows.length === 0) continue;
 
-      // Check for RTL / Arabic
-      const isArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(pText);
+        curY += 12;
+        const colCount = Math.max(...Array.from(rows).map(r => r.getElementsByTagName("w:tc").length));
+        if (colCount === 0) continue;
 
-      if (isHeading1) {
-        y -= 8;
-        drawWrappedText(pText, 17, true, isArabic);
-        y -= 6;
-      } else if (isHeading2) {
-        y -= 6;
-        drawWrappedText(pText, 14, true, isArabic);
-        y -= 4;
-      } else {
-        const isLikelyTitle = (pText.length < 70 && hasBold && !pText.endsWith('.'));
-        const fSize = isLikelyTitle ? 13 : 11;
-        drawWrappedText(pText, fSize, hasBold || isLikelyTitle, isArabic);
-        y -= 4;
+        const cellWidth = Math.floor(contentWidth / colCount);
+        const cellPadding = 12;
+
+        for (let r = 0; r < rows.length; r++) {
+          const cells = rows[r].getElementsByTagName("w:tc");
+          let maxCellHeight = 44;
+
+          const cellTexts = [];
+          for (let col = 0; col < cells.length; col++) {
+            const cellText = Array.from(cells[col].getElementsByTagName("w:t")).map(t => t.textContent).join(" ").trim();
+            cellTexts.push(cellText);
+          }
+
+          if (curY + maxCellHeight > a4Height - marginBottom) {
+            await commitPage();
+          }
+
+          for (let col = 0; col < cellTexts.length; col++) {
+            const x = marginX + (col * cellWidth);
+            const isHeaderRow = (r === 0);
+
+            ctx.fillStyle = isHeaderRow ? '#f1f5f9' : '#ffffff';
+            ctx.fillRect(x, curY, cellWidth, maxCellHeight);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, curY, cellWidth, maxCellHeight);
+
+            const txt = cellTexts[col];
+            if (txt) {
+              const isAr = /[\u0600-\u06FF]/.test(txt);
+              ctx.font = `${isHeaderRow ? 'bold ' : ''}18px system-ui, sans-serif`;
+              ctx.fillStyle = isHeaderRow ? '#0f172a' : '#334155';
+              ctx.textAlign = isAr ? 'right' : 'left';
+              const textX = isAr ? (x + cellWidth - cellPadding) : (x + cellPadding);
+              ctx.fillText(txt, textX, curY + 28, cellWidth - (cellPadding * 2));
+            }
+          }
+          curY += maxCellHeight;
+          hasContentOnPage = true;
+        }
+        curY += 16;
       }
+    }
+
+    if (hasContentOnPage || pdfDoc.getPageCount() === 0) {
+      await commitPage();
     }
 
     return await pdfDoc.save();
@@ -641,7 +737,8 @@ const MobileEngine = {
   // 17. PDF to Word (.docx) (100% Offline Client-Side Engine)
   pdfToWord: async function(pdfFile) {
     const buffer = await this.readFileAsArrayBuffer(pdfFile);
-    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    const pdfData = new Uint8Array(buffer);
+    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
     const numPages = pdf.numPages;
 
     let bodyXml = "";
@@ -752,7 +849,7 @@ const MobileEngine = {
         if (i > 0) {
           allBodyXml += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
         }
-        allBodyXml += `<w:p><w:r><w:rPr><w:b/><w:sz w:val="32"/></w:rPr><w:t xml:space="preserve">Document : ${pdfFiles[i].name}</w:t></w:r></w:p>`;
+        allBodyXml += `<w:p><w:r><w:rPr><w:b/><w:sz w:val="32"/></w:rPr><w:t xml:space="preserve">Document : ${escapeXml(pdfFiles[i].name)}</w:t></w:r></w:p>`;
         
         const singleBytes = await this.pdfToWord(pdfFiles[i]);
         const singleZip = await JSZip.loadAsync(singleBytes);

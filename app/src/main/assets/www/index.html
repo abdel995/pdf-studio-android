@@ -165,6 +165,30 @@
     </div>
   </div>
 
+  <!-- MODAL: DOCUMENT PREVIEW / VISUALISATION -->
+  <div id="document-preview-modal" class="modal-backdrop" onclick="if(event.target===this) closeDocumentPreviewModal()">
+    <div class="history-modal-content" style="max-width: 900px; width: 95%; max-height: 90vh;">
+      <div class="history-modal-header" style="justify-content: space-between;">
+        <h3 id="doc-preview-title" style="margin:0; font-size:1.05rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">
+          👁️ Aperçu du document
+        </h3>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <button id="doc-preview-share-btn" class="btn btn-secondary btn-icon-sm" title="Partager">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            <span>Partager</span>
+          </button>
+          <button id="doc-preview-open-btn" class="btn btn-primary btn-icon-sm" title="Ouvrir dans une application">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <span>Ouvrir</span>
+          </button>
+          <button class="drawer-close-btn" onclick="closeDocumentPreviewModal()" aria-label="Fermer">✕</button>
+        </div>
+      </div>
+      <div class="history-modal-body" id="doc-preview-body" style="padding: 1rem; overflow-y: auto; max-height: calc(90vh - 120px); text-align: center; background: #334155;">
+      </div>
+    </div>
+  </div>
+
 
   <main class="main-wrapper">
 
@@ -2068,6 +2092,7 @@
   <script src="js/jszip.min.js"></script>
   <script src="js/pdf-lib.min.js"></script>
   <script src="js/pdf.min.js"></script>
+  <script src="js/pdf.worker.min.js"></script>
   <script src="js/mobile_engine.js"></script>
   <script src="js/app.js"></script>
   <script src="js/editor.js"></script>
